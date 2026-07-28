@@ -1,0 +1,99 @@
+schema_version: "1.0.0"
+dataset_name: "IBM Telco Customer Churn"
+primary_key: "customerID"
+
+target_column: "Churn"
+target_allowed_values:
+  - "Yes"
+  - "No"
+
+categorical_columns:
+  gender:
+    allowed_values:
+      - "Female"
+      - "Male"
+  SeniorCitizen:
+    allowed_values:
+      - 0
+      - 1
+  Partner:
+    allowed_values:
+      - "Yes"
+      - "No"
+  Dependents:
+    allowed_values:
+      - "Yes"
+      - "No"
+  PhoneService:
+    allowed_values:
+      - "Yes"
+      - "No"
+  MultipleLines:
+    allowed_values:
+      - "No phone service"
+      - "No"
+      - "Yes"
+  InternetService:
+    allowed_values:
+      - "DSL"
+      - "Fiber optic"
+      - "No"
+  OnlineSecurity:
+    allowed_values:
+      - "No internet service"
+      - "No"
+      - "Yes"
+  OnlineBackup:
+    allowed_values:
+      - "No internet service"
+      - "No"
+      - "Yes"
+  DeviceProtection:
+    allowed_values:
+      - "No internet service"
+      - "No"
+      - "Yes"
+  TechSupport:
+    allowed_values:
+      - "No internet service"
+      - "No"
+      - "Yes"
+  StreamingTV:
+    allowed_values:
+      - "No internet service"
+      - "No"
+      - "Yes"
+  StreamingMovies:
+    allowed_values:
+      - "No internet service"
+      - "No"
+      - "Yes"
+  Contract:
+    allowed_values:
+      - "Month-to-month"
+      - "One year"
+      - "Two year"
+  PaperlessBilling:
+    allowed_values:
+      - "Yes"
+      - "No"
+  PaymentMethod:
+    allowed_values:
+      - "Electronic check"
+      - "Mailed check"
+      - "Bank transfer (automatic)"
+      - "Credit card (automatic)"
+
+numeric_columns:
+  tenure:
+    min_value: 0
+    allow_null: false
+  MonthlyCharges:
+    min_value: 0.0
+    allow_null: false
+  TotalCharges:
+    min_value: 0.0
+    allow_null: true
+
+duplicate_policy:
+  allow_duplicates: false
