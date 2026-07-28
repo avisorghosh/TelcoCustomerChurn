@@ -15,10 +15,10 @@ dist/
 *.egg-info/
 
 # Local ML data and artifacts (keep directory markers only)
-data/*
-!data/.gitkeep
-models/*
-!models/.gitkeep
+/data/*
+!/data/.gitkeep
+/models/*
+!/models/.gitkeep
 mlruns/
 mlartifacts/
 
