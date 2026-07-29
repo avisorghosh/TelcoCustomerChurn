@@ -65,9 +65,16 @@ def get_batch_scoring_output_schema() -> DataFrameSchema:
     )
 
 
-def test_batch_scoring_output_contract(sample_valid_df: pd.DataFrame) -> None:
+def test_batch_scoring_output_contract(
+    sample_valid_df: pd.DataFrame,
+    trained_model_dir: Path,
+) -> None:
     """Validate that score_batch produces output adhering strictly to output schema."""
-    pipeline, metadata = load_artifacts("models")
+    pipeline, metadata = load_artifacts(
+        trained_model_dir,
+        pipeline_filename="serving_pipeline.joblib",
+        metadata_filename="serving_metadata.json",
+    )
     input_df = sample_valid_df.drop(columns=["Churn"]).copy()
 
     scored_df = score_batch(
@@ -86,7 +93,9 @@ def test_batch_scoring_output_contract(sample_valid_df: pd.DataFrame) -> None:
 
 
 def test_end_to_end_scoring_output_contract(
-    tmp_path: Path, sample_valid_df: pd.DataFrame
+    tmp_path: Path,
+    sample_valid_df: pd.DataFrame,
+    serving_config_for_tmp_model: Path,
 ) -> None:
     """Validate end-to-end run_batch_scoring output file contract."""
     input_csv = tmp_path / "valid_input.csv"
@@ -94,6 +103,7 @@ def test_end_to_end_scoring_output_contract(
 
     scored_df, output_path = run_batch_scoring(
         input_path=input_csv,
+        config_path=serving_config_for_tmp_model,
         output_path_override=tmp_path / "output_predictions.csv",
     )
 

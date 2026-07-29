@@ -129,6 +129,7 @@ def train_model(
     config_path: str | Path | None = None,
     data_path_override: str | Path | None = None,
     log_to_mlflow: bool = True,
+    output_dir_override: str | Path | None = None,
 ) -> tuple[Pipeline, dict[str, Any], dict[str, Path]]:
     """Execute model training workflow and serialize artifacts.
 
@@ -137,6 +138,8 @@ def train_model(
         data_path_override: Optional path to dataset override.
         log_to_mlflow: Whether to log experiment metadata, artifacts,
             and model to MLflow.
+        output_dir_override: Optional artifact directory override. Use in tests
+            so training never mutates the repository ``models/`` directory.
 
     Returns:
         Tuple of (fitted_pipeline, metadata_dict, artifact_paths_dict).
@@ -207,7 +210,7 @@ def train_model(
 
     # 8. Save artifacts
     artifacts_config = config.get("artifacts", {})
-    output_dir = artifacts_config.get("output_dir", "models")
+    output_dir = output_dir_override or artifacts_config.get("output_dir", "models")
     pipeline_filename = artifacts_config.get(
         "pipeline_filename", "baseline_pipeline.joblib"
     )
@@ -246,12 +249,14 @@ def train_baseline(
     config_path: str | Path | None = None,
     data_path_override: str | Path | None = None,
     log_to_mlflow: bool = True,
+    output_dir_override: str | Path | None = None,
 ) -> tuple[Pipeline, dict[str, Any], dict[str, Path]]:
     """Execute complete baseline training workflow and serialize artifacts."""
     return train_model(
         config_path=config_path,
         data_path_override=data_path_override,
         log_to_mlflow=log_to_mlflow,
+        output_dir_override=output_dir_override,
     )
 
 
@@ -259,12 +264,14 @@ def train_candidate(
     config_path: str | Path | None = "configs/candidate_training.yaml",
     data_path_override: str | Path | None = None,
     log_to_mlflow: bool = True,
+    output_dir_override: str | Path | None = None,
 ) -> tuple[Pipeline, dict[str, Any], dict[str, Path]]:
-    """Execute candidate LightGBM training workflow and serialize artifacts."""
+    """Execute candidate GradientBoosting training workflow and serialize artifacts."""
     return train_model(
         config_path=config_path,
         data_path_override=data_path_override,
         log_to_mlflow=log_to_mlflow,
+        output_dir_override=output_dir_override,
     )
 
 

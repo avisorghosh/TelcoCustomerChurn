@@ -1,9 +1,14 @@
 """Pytest shared fixtures configuration."""
 
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import pytest
+import yaml
+
+from churn_prediction.models.serialization import save_artifacts
+from churn_prediction.models.trainer import train_baseline
 
 
 @pytest.fixture
@@ -124,3 +129,54 @@ def synthetic_dataset() -> pd.DataFrame:
             }
         )
     return pd.DataFrame(rows)
+
+
+@pytest.fixture
+def trained_model_dir(tmp_path: Path, synthetic_dataset: pd.DataFrame) -> Path:
+    """Train a baseline model into a temporary directory (never mutates models/)."""
+    csv_path = tmp_path / "train_data.csv"
+    synthetic_dataset.to_csv(csv_path, index=False)
+    model_dir = tmp_path / "models"
+    pipeline, metadata, _ = train_baseline(
+        data_path_override=csv_path,
+        log_to_mlflow=False,
+        output_dir_override=model_dir,
+    )
+    save_artifacts(
+        pipeline=pipeline,
+        metadata=metadata,
+        output_dir=model_dir,
+        pipeline_filename="serving_pipeline.joblib",
+        metadata_filename="serving_metadata.json",
+    )
+    return model_dir
+
+
+@pytest.fixture
+def serving_config_for_tmp_model(tmp_path: Path, trained_model_dir: Path) -> Path:
+    """Write a serving YAML that points at the temporary trained model directory."""
+    config = {
+        "schema_version": "1.0.0",
+        "model_name": "baseline_logistic_regression",
+        "model": {
+            "model_dir": str(trained_model_dir),
+            "pipeline_filename": "serving_pipeline.joblib",
+            "metadata_filename": "serving_metadata.json",
+        },
+        "data": {"contract_config_path": "configs/data_contract.yaml"},
+        "scoring": {
+            "decision_threshold": 0.50,
+            "batch_id_prefix": "batch",
+            "id_column": "customerID",
+        },
+        "output": {
+            "output_dir": str(tmp_path / "scoring"),
+            "output_filename": "batch_predictions.csv",
+            "quarantine_dir": str(tmp_path / "quarantine"),
+        },
+        "api": {"host": "127.0.0.1", "port": 8000},
+    }
+    config_path = tmp_path / "serving.yaml"
+    with open(config_path, "w", encoding="utf-8") as f:
+        yaml.safe_dump(config, f)
+    return config_path

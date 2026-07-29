@@ -38,21 +38,21 @@ Validate raw customer snapshot dataset (`Telco-Customer-Churn.csv`) against the 
 uv run python scripts/validate_scoring_input.py --input-path Telco-Customer-Churn.csv
 ```
 
-### Step 3: Model Training & MLflow Registration
-
-Train the regularized logistic regression baseline model. This automatically logs dataset lineage, metrics, parameters, model signature, and registers version `1` in MLflow under `telco_churn_model`.
+### Step 3: Model Training & Comparison
 
 ```bash
-uv run python scripts/train_baseline.py
+uv run python scripts/train_baseline.py --no-mlflow
+uv run python scripts/train_candidate.py --no-mlflow
+uv run python scripts/evaluate_baseline.py
+uv run python scripts/run_comparison.py
+uv run python scripts/promote_selected_model.py
 ```
+
+Promotion copies the decision-record winner to `models/serving_pipeline.joblib` for batch scoring and the API.
 
 ### Step 4: Model Evaluation
 
-Evaluate trained baseline model against untouched holdout test partition and generate performance metrics, PR-AUC curves, and campaign capacity breakdown reports.
-
-```bash
-uv run python scripts/evaluate_baseline.py
-```
+Baseline evaluation artifacts are produced by `evaluate_baseline.py`. Candidate selection gates use the validation split; final comparison metrics are reported on the holdout test split (see `reports/evaluation/decision_record.md`).
 
 ### Step 5: Idempotent Batch Scoring
 

@@ -1,4 +1,4 @@
-"""Thin operator script to train the candidate LightGBM churn prediction model.
+"""Thin operator script to train the candidate GradientBoosting churn model.
 
 Business logic resides strictly inside src/churn_prediction/models/trainer.py.
 """
@@ -10,9 +10,9 @@ from churn_prediction.models.trainer import train_candidate
 
 
 def main() -> None:
-    """Execute candidate LightGBM training CLI entry point."""
+    """Execute candidate GradientBoosting training CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Train the candidate LightGBM churn prediction model."
+        description="Train the candidate GradientBoosting churn prediction model."
     )
     parser.add_argument(
         "--config",
@@ -33,7 +33,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    print("=== Training Candidate LightGBM Churn Prediction Model ===")
+    print("=== Training Candidate GradientBoosting Churn Prediction Model ===")
     try:
         pipeline, metadata, artifact_paths = train_candidate(
             config_path=args.config,

@@ -26,6 +26,7 @@ def test_load_serving_config(tmp_path: Path) -> None:
     assert "schema_version" in config
     assert "model" in config
     assert "scoring" in config
+    assert config["model"]["pipeline_filename"] == "serving_pipeline.joblib"
 
     with pytest.raises(FileNotFoundError):
         load_serving_config(tmp_path / "non_existent.yaml")
@@ -99,9 +100,14 @@ def test_quarantine_batch(tmp_path: Path) -> None:
 
 def test_score_batch_determinism_and_row_integrity(
     sample_valid_df: pd.DataFrame,
+    trained_model_dir: Path,
 ) -> None:
     """Test score_batch row ordering, 1-to-1 mapping, and determinism."""
-    pipeline, _ = load_artifacts("models")
+    pipeline, _ = load_artifacts(
+        trained_model_dir,
+        pipeline_filename="serving_pipeline.joblib",
+        metadata_filename="serving_metadata.json",
+    )
 
     input_df = sample_valid_df.drop(columns=["Churn"]).copy()
     scored_1 = score_batch(input_df, pipeline, batch_id="b1", decision_threshold=0.5)
@@ -113,9 +119,16 @@ def test_score_batch_determinism_and_row_integrity(
     assert list(scored_1["predicted_class"]) == list(scored_2["predicted_class"])
 
 
-def test_score_batch_threshold_override(sample_valid_df: pd.DataFrame) -> None:
+def test_score_batch_threshold_override(
+    sample_valid_df: pd.DataFrame,
+    trained_model_dir: Path,
+) -> None:
     """Test that decision threshold correctly alters predicted_class outputs."""
-    pipeline, _ = load_artifacts("models")
+    pipeline, _ = load_artifacts(
+        trained_model_dir,
+        pipeline_filename="serving_pipeline.joblib",
+        metadata_filename="serving_metadata.json",
+    )
     input_df = sample_valid_df.drop(columns=["Churn"]).copy()
 
     scored_low = score_batch(input_df, pipeline, decision_threshold=0.01)
@@ -131,43 +144,57 @@ def test_run_batch_scoring_missing_model(
     input_csv = tmp_path / "input.csv"
     sample_valid_df.drop(columns=["Churn"]).to_csv(input_csv, index=False)
 
-    bad_config = tmp_path / "bad_serving.yaml"
-    bad_config.write_text(
+    config_path = tmp_path / "serving.yaml"
+    config_path.write_text(
         f"""
 schema_version: "1.0.0"
 model:
   model_dir: "{tmp_path / "non_existent_models"}"
-  pipeline_filename: "missing.joblib"
-  metadata_filename: "missing.json"
+  pipeline_filename: "serving_pipeline.joblib"
+  metadata_filename: "serving_metadata.json"
+data:
+  contract_config_path: "configs/data_contract.yaml"
+scoring:
+  decision_threshold: 0.50
+output:
+  output_dir: "{tmp_path}"
+  quarantine_dir: "{tmp_path / "quarantine"}"
 """
     )
 
     with pytest.raises(ModelLoadError):
-        run_batch_scoring(input_csv, config_path=bad_config)
+        run_batch_scoring(input_path=input_csv, config_path=config_path)
 
 
 def test_run_batch_scoring_corrupt_model(
     tmp_path: Path, sample_valid_df: pd.DataFrame
 ) -> None:
-    """Test error handling when model artifact is corrupted."""
+    """Test error handling when model artifacts are corrupt."""
+    models_dir = tmp_path / "corrupt_models"
+    models_dir.mkdir()
+    (models_dir / "serving_pipeline.joblib").write_text("corrupted content")
+    (models_dir / "serving_metadata.json").write_text("{}")
+
     input_csv = tmp_path / "input.csv"
     sample_valid_df.drop(columns=["Churn"]).to_csv(input_csv, index=False)
 
-    models_dir = tmp_path / "corrupt_models"
-    models_dir.mkdir()
-    (models_dir / "baseline_pipeline.joblib").write_text("corrupted content")
-    (models_dir / "baseline_metadata.json").write_text("{}")
-
-    bad_config = tmp_path / "corrupt_config.yaml"
-    bad_config.write_text(
+    config_path = tmp_path / "serving.yaml"
+    config_path.write_text(
         f"""
 schema_version: "1.0.0"
 model:
   model_dir: "{models_dir}"
-  pipeline_filename: "baseline_pipeline.joblib"
-  metadata_filename: "baseline_metadata.json"
+  pipeline_filename: "serving_pipeline.joblib"
+  metadata_filename: "serving_metadata.json"
+data:
+  contract_config_path: "configs/data_contract.yaml"
+scoring:
+  decision_threshold: 0.50
+output:
+  output_dir: "{tmp_path}"
+  quarantine_dir: "{tmp_path / "quarantine"}"
 """
     )
 
     with pytest.raises(ModelLoadError):
-        run_batch_scoring(input_csv, config_path=bad_config)
+        run_batch_scoring(input_path=input_csv, config_path=config_path)

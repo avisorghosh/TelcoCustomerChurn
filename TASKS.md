@@ -4,7 +4,7 @@ Each milestone has a narrow acceptance test. Do not begin a later milestone unti
 
 | Milestone | Scope | Independently testable definition of done |
 | --- | --- | --- |
-| 0. Record portfolio assumptions | Record the proxy horizon, weekly scoring cadence, configurable top-10% capacity default, sensitive-feature policy, public-data provenance, and local deployment scope. | Assumptions are documented in README/system design; no unsupported production claims remain. |
+| 0. Record portfolio assumptions [Completed] | Record the proxy horizon, weekly scoring cadence, configurable top-10% capacity default, sensitive-feature policy, public-data provenance, and local deployment scope. | Assumptions are documented in README/system design; no unsupported production claims remain. |
 | 1. Repository foundation [Completed] | Initialize Git; create package layout, `pyproject`, locked dependencies, `.gitignore`, licence, Ruff/Pytest configuration, and enforced CI for lint, format, tests, and coverage. | Clean checkout installs; lint, formatting, smoke test, and CI run successfully. |
 | 2. Data contract [Completed] | Implement source manifest and Pandera/custom validation for schema, types, domains, IDs, duplicates, and `TotalCharges` blanks. | Valid local CSV produces a quality report; deliberately malformed fixtures fail with clear diagnostics. |
 | 3. Exploratory analysis [Completed] | Produce a concise, reproducible EDA report/notebook; document distributions, target balance, missingness, leakage review, and split rationale. | Report reruns from source data and contains no reusable production logic. |

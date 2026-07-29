@@ -12,12 +12,12 @@ from churn_prediction.api.service import (
     InferenceService,
     ModelNotLoadedError,
 )
-from churn_prediction.features.pipeline import load_training_config
-from churn_prediction.models.serialization import save_artifacts
-from churn_prediction.models.trainer import (
+from churn_prediction.features.pipeline import (
     build_baseline_pipeline,
-    prepare_features_and_target,
+    load_training_config,
 )
+from churn_prediction.models.serialization import save_artifacts
+from churn_prediction.models.trainer import prepare_features_and_target
 
 
 @pytest.fixture
@@ -38,8 +38,8 @@ def trained_artifacts_dir(tmp_path: Path, sample_valid_df):
         pipeline=pipeline,
         metadata=metadata,
         output_dir=tmp_path,
-        pipeline_filename="baseline_pipeline.joblib",
-        metadata_filename="baseline_metadata.json",
+        pipeline_filename="serving_pipeline.joblib",
+        metadata_filename="serving_metadata.json",
     )
     return tmp_path
 
@@ -143,10 +143,10 @@ def test_inference_service_corrupted_model_failure(tmp_path):
     corrupt_dir = tmp_path / "corrupt_dir"
     corrupt_dir.mkdir()
 
-    pipeline_file = corrupt_dir / "baseline_pipeline.joblib"
+    pipeline_file = corrupt_dir / "serving_pipeline.joblib"
     pipeline_file.write_text("corrupted content not joblib")
 
-    metadata_file = corrupt_dir / "baseline_metadata.json"
+    metadata_file = corrupt_dir / "serving_metadata.json"
     metadata_file.write_text(json.dumps({"model_name": "baseline"}))
 
     service = InferenceService(model_dir=corrupt_dir)

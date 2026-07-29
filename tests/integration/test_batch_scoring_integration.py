@@ -10,15 +10,48 @@ from churn_prediction.models.batch_scoring import (
     BatchValidationError,
     run_batch_scoring,
 )
+from churn_prediction.models.serialization import save_artifacts
+from churn_prediction.models.trainer import train_baseline
 
 
 def test_integration_successful_batch_scoring(tmp_path: Path) -> None:
     """Test full batch scoring pipeline with real dataset artifact."""
-    input_csv = "Telco-Customer-Churn.csv"
-    output_csv = tmp_path / "predictions.csv"
+    model_dir = tmp_path / "models"
+    pipeline, metadata, _ = train_baseline(
+        data_path_override="Telco-Customer-Churn.csv",
+        log_to_mlflow=False,
+        output_dir_override=model_dir,
+    )
+    save_artifacts(
+        pipeline=pipeline,
+        metadata=metadata,
+        output_dir=model_dir,
+        pipeline_filename="serving_pipeline.joblib",
+        metadata_filename="serving_metadata.json",
+    )
 
+    config_path = tmp_path / "serving.yaml"
+    config_path.write_text(
+        f"""
+schema_version: "1.0.0"
+model:
+  model_dir: "{model_dir}"
+  pipeline_filename: "serving_pipeline.joblib"
+  metadata_filename: "serving_metadata.json"
+data:
+  contract_config_path: "configs/data_contract.yaml"
+scoring:
+  decision_threshold: 0.50
+output:
+  output_dir: "{tmp_path}"
+  quarantine_dir: "{tmp_path / "quarantine"}"
+"""
+    )
+
+    output_csv = tmp_path / "predictions.csv"
     scored_df, output_path = run_batch_scoring(
-        input_path=input_csv,
+        input_path="Telco-Customer-Churn.csv",
+        config_path=config_path,
         output_path_override=output_csv,
         batch_id_override="integration_test_batch_001",
     )
@@ -32,7 +65,9 @@ def test_integration_successful_batch_scoring(tmp_path: Path) -> None:
 
 
 def test_integration_invalid_batch_quarantine_no_partial_output(
-    tmp_path: Path, sample_valid_df: pd.DataFrame
+    tmp_path: Path,
+    sample_valid_df: pd.DataFrame,
+    trained_model_dir: Path,
 ) -> None:
     """Test acceptance criterion: invalid batch produces NO partial predictions."""
     invalid_df = sample_valid_df.drop(columns=["Churn"]).copy()
@@ -42,25 +77,25 @@ def test_integration_invalid_batch_quarantine_no_partial_output(
     invalid_df.to_csv(input_csv, index=False)
 
     output_csv = tmp_path / "should_not_exist.csv"
-    quarantine_dir = tmp_path / "quarantine"
+    quarantine_dir = tmp_path / "quarantine_isolated"
 
-    config_path = tmp_path / "test_serving_config.yaml"
+    config_path = tmp_path / "serving_quarantine.yaml"
     config_path.write_text(
         f"""
 schema_version: "1.0.0"
 model:
-  model_dir: "models"
-  pipeline_filename: "baseline_pipeline.joblib"
-  metadata_filename: "baseline_metadata.json"
+  model_dir: "{trained_model_dir}"
+  pipeline_filename: "serving_pipeline.joblib"
+  metadata_filename: "serving_metadata.json"
 data:
   contract_config_path: "configs/data_contract.yaml"
 scoring:
   decision_threshold: 0.50
 output:
   output_dir: "{tmp_path}"
-  output_filename: "should_not_exist.csv"
   quarantine_dir: "{quarantine_dir}"
-"""
+""",
+        encoding="utf-8",
     )
 
     with pytest.raises(BatchValidationError):
@@ -71,10 +106,8 @@ output:
             batch_id_override="quarantine_batch_999",
         )
 
-    # Acceptance criterion 1: NO partial scoring output file generated
     assert not output_csv.exists()
 
-    # Acceptance criterion 2: Quarantine report generated
     q_file = quarantine_dir / "quarantine_batch_999_quarantine.json"
     assert q_file.is_file()
 
@@ -87,7 +120,9 @@ output:
 
 
 def test_integration_idempotent_execution(
-    tmp_path: Path, sample_valid_df: pd.DataFrame
+    tmp_path: Path,
+    sample_valid_df: pd.DataFrame,
+    serving_config_for_tmp_model: Path,
 ) -> None:
     """Test that scoring the same dataset twice produces identical outputs."""
     input_csv = tmp_path / "idempotent_input.csv"
@@ -98,12 +133,13 @@ def test_integration_idempotent_execution(
 
     scored1, path1 = run_batch_scoring(
         input_path=input_csv,
+        config_path=serving_config_for_tmp_model,
         output_path_override=out1,
         batch_id_override="fixed_batch_id",
     )
-
     scored2, path2 = run_batch_scoring(
         input_path=input_csv,
+        config_path=serving_config_for_tmp_model,
         output_path_override=out2,
         batch_id_override="fixed_batch_id",
     )

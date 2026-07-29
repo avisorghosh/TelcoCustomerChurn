@@ -1,6 +1,8 @@
 {
-  "title": "Model Selection Decision Record: Baseline vs. LightGBM Candidate",
-  "timestamp": "2026-07-29T14:39:30.621594+00:00",
+  "title": "Model Selection Decision Record: Baseline vs. GradientBoosting Candidate",
+  "timestamp": "2026-07-29T16:35:21.771344+00:00",
+  "selection_split": "val",
+  "selection_sample_size": 1057,
   "evaluation_split": "test",
   "sample_size": 1057,
   "models_compared": [
@@ -17,7 +19,7 @@
     },
     {
       "model_name": "candidate_gradient_boosting",
-      "model_type": "LightGBM",
+      "model_type": "GradientBoosting",
       "hyperparameters": {
         "n_estimators": 100,
         "max_depth": 3,
@@ -28,6 +30,35 @@
       }
     }
   ],
+  "selection_metrics_summary": {
+    "baseline": {
+      "pr_auc": 0.6288,
+      "roc_auc": 0.8292,
+      "brier_score": 0.141,
+      "accuracy": 0.7985,
+      "precision": 0.6491,
+      "recall": 0.5267,
+      "f1_score": 0.5815,
+      "precision_at_capacity": 0.7264,
+      "recall_at_capacity": 0.274
+    },
+    "candidate": {
+      "pr_auc": 0.6359,
+      "roc_auc": 0.8352,
+      "brier_score": 0.1384,
+      "accuracy": 0.8042,
+      "precision": 0.685,
+      "recall": 0.4875,
+      "f1_score": 0.5696,
+      "precision_at_capacity": 0.7358,
+      "recall_at_capacity": 0.2776
+    },
+    "difference_candidate_minus_baseline": {
+      "pr_auc": 0.0071,
+      "brier_score": -0.0026,
+      "demographic_parity_difference_change": -0.0006
+    }
+  },
   "metrics_summary": {
     "baseline": {
       "pr_auc": 0.6437,
@@ -63,7 +94,7 @@
     "baseline_brier_score": 0.1361,
     "candidate_brier_score": 0.1332,
     "brier_score_difference": -0.0029,
-    "observations": "Candidate LightGBM Brier score is 0.1332 compared to Baseline Logistic Regression Brier score of 0.1361."
+    "observations": "Candidate (GradientBoosting) test Brier score is 0.1332 vs baseline (LogisticRegression) test Brier score of 0.1361."
   },
   "segment_analysis_summary": {
     "baseline": {
@@ -614,10 +645,10 @@
       ],
       "weaknesses": [
         "Assumes linear decision boundaries in feature space",
-        "Limited capacity to capture complex non-linear feature interactions without manual feature engineering"
+        "Limited capacity to capture non-linear feature interactions"
       ]
     },
-    "candidate_lightgbm": {
+    "candidate_boosted_tree": {
       "strengths": [
         "Captures non-linear feature interactions naturally",
         "Higher PR-AUC ranking performance on churn target class",
@@ -625,35 +656,36 @@
       ],
       "weaknesses": [
         "Slightly increased model complexity compared to linear baseline",
-        "Requires strict hyperparameter bounding to prevent overfitting on small sample sizes"
+        "Requires strict hyperparameter bounding to prevent overfitting"
       ]
     }
   },
   "acceptance_gates": {
+    "selection_split": "val",
     "pr_auc_improvement_gate": {
       "threshold": ">= +0.0100",
-      "measured_difference": 0.0316,
-      "passed": true
+      "measured_difference": 0.0071,
+      "passed": false
     },
     "calibration_integrity_gate": {
       "threshold": "<= +0.0200 Brier degradation",
-      "measured_difference": -0.0029,
+      "measured_difference": -0.0026,
       "passed": true
     },
     "fairness_parity_gate": {
       "threshold": "<= +0.0500 DP difference change",
-      "measured_difference": -0.0002,
+      "measured_difference": -0.0006,
       "passed": true
     },
     "operational_reproducibility_gate": {
-      "threshold": "Fully reproducible pipeline execution",
+      "threshold": "Selected artifacts exist and are loadable",
       "passed": true
     }
   },
   "final_decision": {
-    "selected_model_name": "candidate_gradient_boosting",
-    "selected_model_type": "LightGBM",
-    "all_gates_passed": true,
-    "rationale": "Selected 'candidate_gradient_boosting' (LightGBM) because it satisfied all predefined acceptance gates: PR-AUC improved by +0.0316 (gate threshold: >= +0.0100); Brier calibration score changed by -0.0029 (gate threshold: <= +0.0200); gender demographic parity difference changed by -0.0002 (gate threshold: <= +0.0500); and pipeline execution is fully reproducible and integrated."
+    "selected_model_name": "baseline_logistic_regression",
+    "selected_model_type": "LogisticRegression",
+    "all_gates_passed": false,
+    "rationale": "Retained baseline 'baseline_logistic_regression' because the candidate failed one or more validation-split acceptance gates."
   }
 }

@@ -80,8 +80,11 @@ System behavior can be customized using environment variables or versioned YAML 
 
 Active production model artifacts are stored in the local `models/` directory (ignored by Git):
 
-- `models/baseline_pipeline.joblib`: Serialized scikit-learn preprocessing and model pipeline.
-- `models/baseline_metadata.json`: Model version, checksum, training metrics, and feature metadata.
+- `models/baseline_pipeline.joblib` / `candidate_pipeline.joblib`: trained candidate artifacts
+- `models/serving_pipeline.joblib`: promoted serving pipeline (created by `scripts/promote_selected_model.py`)
+- `models/serving_metadata.json`: serving metadata companion file
+
+Clean checkout workflow: train → compare → promote → score/serve/docker. See README Quick Start.
 
 ---
 
@@ -107,8 +110,17 @@ The service includes a production multi-stage Dockerfile based on `python:3.11-s
 
 ### Build Container Image
 
+Train and promote serving artifacts first, then build:
+
 ```bash
+uv run python scripts/promote_selected_model.py
 docker build -t telco-churn-api:latest .
+```
+
+Or mount host artifacts at runtime:
+
+```bash
+docker run --rm -p 8000:8000 -v "$(pwd)/models:/app/models" telco-churn-api:latest
 ```
 
 ### Run Container Instance

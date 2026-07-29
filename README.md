@@ -1,320 +1,213 @@
 # Customer Churn Prediction System
 
-A production-oriented machine learning product designed to identify IBM Telco customers at risk of churn. Built with software engineering rigor, explicit data contracts, reproducible pipelines, batch scoring, FastAPI serving, and containerization.
+Production-oriented churn risk scoring for IBM Telco-style customer snapshots: data contracts, reproducible training, capacity-aware evaluation, batch scoring, FastAPI serving, MLflow tracking, and containerized deployment.
+
+This is a **portfolio / local-deployment** system. It is not a temporally validated production forecasting product.
 
 ---
 
-## 📌 Project Overview
+## Project Overview
 
-This repository demonstrates an end-to-end Machine Learning System built as a production-quality product. Rather than focusing solely on offline modeling in Jupyter notebooks, it implements a robust, modular, and maintainable pipeline covering data contract validation, stratified baseline training, probability calibration, capacity-constrained batch scoring, REST API serving, and containerized deployment.
+The repository implements an end-to-end ML product rather than a notebook-only model:
 
-### Key Highlights
-- **Data Contract Enforcement**: Ingestion validation using Pandera schemas and custom domain checks (rejecting duplicate IDs, invalid types, and malformed fields).
-- **Reproducible Pipelines**: scikit-learn `Pipeline` and `ColumnTransformer` models with strict split protocols (70% train, 15% val, 15% test) avoiding data leakage.
-- **Business-First Evaluation**: Optimized for Precision-Recall AUC (PR-AUC) and capacity-constrained campaign thresholds (top 10% target allocation) rather than naive 0.5 accuracy.
-- **Idempotent Batch Scoring**: Versioned batch scoring pipeline producing deterministic customer worklists and quarantining malformed data without partial writes.
-- **REST Inference API**: FastAPI application serving single-customer risk predictions with correlation ID tracing, health/readiness probes, and error handling.
-- **Production Containerization**: Multi-stage, non-root Docker runtime with deterministic dependency locks (`uv.lock`) and configurable environment variables.
+- Pandera data-contract validation with quarantine on failure
+- Stratified 70/15/15 train/validation/test splits and sklearn `Pipeline` artifacts
+- Business-first metrics (PR-AUC, top-10% capacity precision/recall, calibration/Brier)
+- Validation-gated candidate comparison (sklearn `GradientBoostingClassifier` vs logistic regression)
+- Idempotent batch scoring and a FastAPI single-record API
+- MLflow lineage + local registry, Prometheus metrics, drift/quality reports
+
+### Documentation Index
+
+| Document | Purpose |
+| --- | --- |
+| [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) | Architecture and design rationale |
+| [docs/model_card.md](docs/model_card.md) | Intended use, limitations, fairness, ops |
+| [reports/evaluation/decision_record.md](reports/evaluation/decision_record.md) | Candidate selection decision record |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Environment and deployment notes |
+| [RELEASE.md](RELEASE.md) | Release rehearsal procedure |
+| [ROLLBACK.md](ROLLBACK.md) | Model restore / rollback |
 
 ---
 
-## 🏗 System Architecture
+## Assumptions & Limitations
+
+| Topic | Portfolio default |
+| --- | --- |
+| Prediction horizon | **Proxy** next-billing-cycle / weekly churn risk (dataset has no event timestamps) |
+| Scoring cadence | Weekly batch scoring |
+| Campaign capacity | Configurable; default **top 10%** (`configs/evaluation.yaml`) |
+| Sensitive features | `gender` and `SeniorCitizen` excluded from predictors; fairness review only |
+| Data provenance | Public IBM Telco Customer Churn CSV shipped for demo reproducibility |
+| Deployment scope | Local Python + local Docker + local MLflow file store |
+| Limitations | No out-of-time split; no real intervention outcomes in source data; auth/TLS/rate limits are deployment concerns |
+
+Unsupported claims to avoid: causal treatment effects from the static CSV alone, production SLA guarantees without load tests, or temporal generalization proof.
+
+---
+
+## System Architecture
 
 ```mermaid
 flowchart TD
     subgraph Data Layer
-        A[Raw Customer CSV\nTelco-Customer-Churn.csv] --> B[Data Contract Validator\nPandera Schema & Manifest]
+        A[Raw Customer CSV] --> B[Data Contract Validator]
         B --> C[Validated Snapshot]
     end
 
     subgraph Offline ML Pipeline
-        C --> D[Stratified Splitter\n70% Train / 15% Val / 15% Test]
-        D --> E[Preprocessing & Trainer\nColumnTransformer + LogisticRegression]
-        E --> F[Evaluation Contract\nPR-AUC, Calibration & Top 10% Capacity]
-        F --> G[Artifact Store\nmodels/baseline_pipeline.joblib\nmodels/baseline_metadata.json]
+        C --> D[Stratified Splitter]
+        D --> E[Train Baseline + Candidate]
+        E --> F[Validation Gates + Test Report]
+        F --> G[Promote Serving Artifacts]
     end
 
-    subgraph Batch Scoring
-        C --> H[Batch Scoring Engine\nchurn_prediction.models.batch_scoring]
-        G --> H
-        H --> I[Versioned Output CSV\nreports/scoring/batch_predictions.csv]
-    end
-
-    subgraph Serving & Deployment
-        G --> J[Inference Service\nchurn_prediction.api.service]
-        J --> K[FastAPI Web Application\nchurn_prediction.api.app]
-        K --> L[Docker Container Runtime\nMulti-stage slim container]
-        L --> M["API Endpoints\nGET /health\nGET /ready\nPOST /predict"]
+    subgraph Serving
+        G --> H[Batch Scoring]
+        G --> I[FastAPI Inference]
+        I --> J[Docker Runtime]
     end
 ```
 
 ---
 
-## 📂 Repository Structure
+## Technology Stack
+
+| Layer | Choice |
+| --- | --- |
+| Language | Python 3.11 |
+| Packaging | `uv` + `uv.lock` |
+| Validation | Pandera, Pydantic |
+| ML | scikit-learn (`Pipeline`, `ColumnTransformer`, LogisticRegression, GradientBoosting) |
+| Tracking | MLflow (local file store / registry) |
+| Serving | FastAPI + Uvicorn |
+| Container | Multi-stage Docker (`python:3.11-slim`, non-root) |
+| Quality | Pytest, Ruff, GitHub Actions CI |
+| Observability | Structured JSON logs, Prometheus metrics |
+
+---
+
+## Repository Structure
 
 ```text
 .
-├── DEPLOYMENT.md                # Deployment requirements & environment config
-├── RELEASE.md                   # Step-by-step release procedure & rehearsal log
-├── ROLLBACK.md                  # Model rollback & restoration operational guide
-├── AGENTS.md                   # Repository engineering rules & guidelines
-├── SYSTEM_DESIGN.md            # Detailed system design specification
-├── TASKS.md                    # Milestone-based delivery tracking
-├── pyproject.toml              # Project configuration & dependencies
-├── uv.lock                     # Deterministic dependency lockfile
-├── configs/                    # Versioned YAML configurations
-│   ├── data_contract.yaml
-│   ├── evaluation.yaml
-│   ├── observability.yaml
-│   ├── post_deployment.yaml
-│   ├── serving.yaml
-│   └── training.yaml
-├── models/                     # Persisted model artifacts (ignored by Git)
-│   ├── baseline_metadata.json
-│   └── baseline_pipeline.joblib
-├── reports/                    # Generated metrics, plots & quarantine outputs
-│   ├── evaluation/
-│   ├── post_deployment/
-│   ├── quarantine/
-│   └── scoring/
-├── scripts/                    # Thin operator entry points
-│   ├── run_eda.py
-│   ├── train_baseline.py
-│   ├── evaluate_baseline.py
-│   ├── validate_scoring_input.py
-│   ├── run_batch_scoring.py
-│   ├── run_api.py
-│   └── run_post_deployment_evaluation.py
-├── src/churn_prediction/       # Main Python application package
-│   ├── api/                    # FastAPI app, schemas, config & service
-│   ├── data/                   # Contract schema & Pandera validation
-│   ├── eda/                    # Analysis & plotting pipeline
-│   ├── evaluation/             # Metrics, calibration & capacity evaluation
-│   ├── features/               # scikit-learn preprocessing pipeline
-│   ├── models/                 # Model trainer, serialization & batch engine
-│   ├── monitoring/             # Structured logging, metrics & drift detection
-│   └── post_deployment/        # Delayed labels, campaign evaluation & retraining logic
-├── tests/                      # Comprehensive test suite
-│   ├── contract/               # Input contract & API schema tests
-│   ├── integration/            # Pipeline & container integration tests
-│   └── unit/                   # Modular unit tests
-└── infra/                      # Infrastructure & container configs
-    └── Dockerfile
+├── configs/                 # Versioned YAML configs
+├── docs/                    # Model card, runbooks, EDA images
+├── scripts/                 # Thin operator CLIs
+├── src/churn_prediction/    # Application package
+├── tests/                   # Unit, contract, integration
+├── models/                  # Local artifacts (gitignored)
+├── reports/                 # Metrics, decision record, plots
+├── Dockerfile               # API container
+└── Telco-Customer-Churn.csv # Public demo dataset
 ```
 
 ---
 
-## ⚡ Quick Start & Development Workflow
+## Quick Start (Clean Checkout)
 
-### Prerequisites
-- Python 3.11+
-- [uv](https://docs.astral.sh/uv/) dependency manager
-- Docker (optional, for containerized serving)
-
-### 1. Environment Setup
+Model binaries are **not** committed. A clean clone must train and promote before scoring, API, or Docker serving.
 
 ```bash
-# Clone the repository
 git clone https://github.com/avisorghosh/TelcoCustomerChurn.git
 cd TelcoCustomerChurn
-
-# Create locked development environment
 uv sync --locked
-```
 
-### 2. Pipeline Execution Commands
-
-Run the complete pipeline from data validation to post-deployment evaluation:
-
-```bash
-# 1. Validate raw data against data contract
+# 1) Validate
 uv run python scripts/validate_scoring_input.py --input-path Telco-Customer-Churn.csv
 
-# 2. Run exploratory data analysis and export plots
-uv run python scripts/run_eda.py
+# 2) Train baseline + candidate
+uv run python scripts/train_baseline.py --no-mlflow
+uv run python scripts/train_candidate.py --no-mlflow
 
-# 3. Train baseline model pipeline and persist artifacts
-uv run python scripts/train_baseline.py
-
-# 4. Evaluate baseline model performance and generate evaluation metrics/plots
+# 3) Evaluate baseline + compare (gates on validation; report on test)
 uv run python scripts/evaluate_baseline.py
+uv run python scripts/run_comparison.py
 
-# 5. Execute batch scoring pipeline
+# 4) Promote decision-record winner to serving artifacts
+uv run python scripts/promote_selected_model.py
+
+# 5) Batch score + API
 uv run python scripts/run_batch_scoring.py
-
-# 6. Launch local FastAPI inference service
 uv run python scripts/run_api.py --host 127.0.0.1 --port 8000
+```
 
-# 7. Run post-deployment learning & delayed-label evaluation workflow
-uv run python scripts/run_post_deployment_evaluation.py
+Optional: EDA (`scripts/run_eda.py`), drift (`scripts/run_drift_report.py`), post-deployment demo (`scripts/run_post_deployment_evaluation.py`).
+
+### Quality checks
+
+```bash
+uv run ruff format --check .
+uv run ruff check .
+uv run pytest
 ```
 
 ---
 
-## 📈 MLflow Experiment Tracking & Model Registry
+## Screenshots / Figures
 
-The system integrates [MLflow](https://mlflow.org/) for experiment tracking, run lineage, data manifest logging, Git revision tracking, artifact storage, model signatures, and local model registry workflows.
+EDA and evaluation plots (generated under `docs/images/` and `reports/evaluation/`):
 
-### 1. Storage & Configuration
-- **Experiment Store**: Recorded locally under `./mlruns/` (ignored by Git).
-- **Tracking URI**: Defaults to `file:./mlruns`, configurable via `configs/training.yaml` or `MLFLOW_TRACKING_URI` environment variable.
-- **Experiment Name**: Defaults to `telco_customer_churn` (`MLFLOW_EXPERIMENT_NAME`).
-- **Registered Model Name**: Defaults to `telco_churn_model` (`MLFLOW_REGISTERED_MODEL_NAME`).
+| Figure | Path |
+| --- | --- |
+| Target distribution | `docs/images/target_distribution.png` |
+| Numeric distributions | `docs/images/numeric_distributions.png` |
+| Categorical churn rates | `docs/images/categorical_churn_rates.png` |
+| Correlation heatmap | `docs/images/correlation_heatmap.png` |
+| Fairness attributes | `docs/images/fairness_attributes.png` |
+| PR / ROC / calibration | `reports/evaluation/*.png` |
 
-### 2. Running Tracked Experiments
-Training automatically logs runs and registers candidate models to MLflow:
+![Target distribution](docs/images/target_distribution.png)
 
-```bash
-# Execute training pipeline (logs lineage, data checksum, git revision, model signature, and artifacts)
-uv run python scripts/train_baseline.py
+---
 
-# Optionally disable MLflow tracking during training if desired
-uv run python scripts/train_baseline.py --no-mlflow
-```
-
-### 3. Inspecting Experiments & Models via MLflow UI
-To start the local MLflow tracking server and UI:
+## MLflow
 
 ```bash
+uv run python scripts/train_baseline.py   # logs lineage by default
 uv run mlflow ui --port 5000
 ```
 
-Open `http://127.0.0.1:5000` in your web browser to:
-- **Inspect Runs & Lineage**: View parameters, random seed, training metrics (`train_accuracy`, `val_accuracy`, `test_accuracy`), split counts, dataset SHA-256 checksum (`data_checksum`), and Git SHA (`git_commit`).
-- **Inspect Model Signatures**: View inferred input feature schema and output predictions for the logged scikit-learn pipeline.
-- **Inspect Artifacts**: Download or review saved `.joblib` pipelines, `metadata.json`, and evaluation reports/plots.
-- **Manage Local Registry**: View registered model versions under the **Models** tab (`telco_churn_model`) and load versioned models for scoring.
-
-### 4. Model Restoration & Rollback
-To restore a previously registered model version from MLflow without retraining:
-
-```bash
-# Restore registered model version 1 into active models/ directory
-uv run python scripts/restore_model.py --version 1
-
-# Or restore from a local backup directory
-uv run python scripts/restore_model.py --source-dir models/backup_v1
-```
-
-For complete release procedures and rollback guidelines, see [RELEASE.md](RELEASE.md) and [ROLLBACK.md](ROLLBACK.md).
+Defaults: tracking URI `file:./mlruns`, experiment `telco_customer_churn`, registered model `telco_churn_model`. Restore with `scripts/restore_model.py` (see [ROLLBACK.md](ROLLBACK.md)).
 
 ---
 
+## Docker
 
-## 🐳 Docker Container Workflow
-
-The service is packaged into a production-ready, multi-stage Docker container built on `python:3.11-slim` running as a non-root user (`appuser` UID 10001).
-
-### Build Image
+Train and promote **before** building so `models/serving_pipeline.joblib` exists locally (copied into the image). Alternatively mount `./models` at runtime.
 
 ```bash
+# After train + promote:
 docker build -t telco-churn-api:latest .
-```
 
-### Run Container
-
-```bash
-docker run -d \
-  --name churn-api \
-  -p 8000:8000 \
+docker run -d --name churn-api -p 8000:8000 \
   -e CHURN_DECISION_THRESHOLD=0.50 \
   telco-churn-api:latest
-```
 
-### Environment Variable Configuration
-
-The container and API service support flexible runtime configuration:
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `CHURN_API_HOST` / `HOST` | `0.0.0.0` | Binding host address for FastAPI server |
-| `CHURN_API_PORT` / `PORT` | `8000` | Port number to expose service on |
-| `CHURN_MODEL_DIR` | `/app/models` | Directory path containing model artifacts |
-| `CHURN_PIPELINE_FILENAME` | `baseline_pipeline.joblib` | Model pipeline filename |
-| `CHURN_METADATA_FILENAME` | `baseline_metadata.json` | Model metadata filename |
-| `CHURN_DECISION_THRESHOLD` | `0.50` | Prediction probability threshold for class assignment |
-| `CHURN_MODEL_VERSION` | Metadata version | Model version string returned in prediction responses |
-| `CHURN_CONFIG_PATH` | `configs/serving.yaml` | Path to custom YAML serving config |
-
-### Stop Container
-
-```bash
-docker stop churn-api
-docker rm churn-api
+# Or mount artifacts from the host:
+docker run --rm -p 8000:8000 -v "$(pwd)/models:/app/models" telco-churn-api:latest
 ```
 
 ---
 
-## 🚀 API Endpoint Specifications
+## API
 
-### 1. Health Probe (`GET /health`)
-Returns general service status and model loading state.
-
-```bash
-curl http://localhost:8000/health
-```
-
-**Response:**
-```json
-{
-  "status": "ok",
-  "model_loaded": true
-}
-```
-
-### 2. Readiness Probe (`GET /ready`)
-Returns `200 OK` when ready to serve inference requests, or `503 Service Unavailable` if model artifact is missing/unloaded.
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /health` | Liveness |
+| `GET /ready` | Model loaded |
+| `GET /metrics` | Prometheus metrics |
+| `POST /predict` | Single-customer score |
 
 ```bash
-curl http://localhost:8000/ready
+curl -s http://127.0.0.1:8000/health
+curl -s http://127.0.0.1:8000/ready
 ```
 
-**Response:**
-```json
-{
-  "status": "ready",
-  "model_loaded": true
-}
-```
-
-### 3. Prometheus Metrics Endpoint (`GET /metrics`)
-Exposes Prometheus operational and model performance metrics.
+Example prediction:
 
 ```bash
-curl http://localhost:8000/metrics
-```
-
----
-
-## 🔍 System Observability, Monitoring & Operations
-
-### Structured Privacy-Safe Logging
-- Emits structured JSON log lines containing `timestamp`, `level`, `event`, `correlation_id`, `model_version`, and context.
-- **Privacy Safety**: Automatically redacts sensitive fields (`customerID`, `gender`, raw features payload, PII).
-
-### Prometheus Metrics
-- **API Metrics**: `telco_churn_api_requests_total`, `telco_churn_api_request_duration_seconds`, `telco_churn_predictions_total`, `telco_churn_prediction_failures_total`.
-- **Batch Scoring Metrics**: `telco_churn_batch_scoring_records_total` (accepted/rejected), `telco_churn_batch_scoring_validation_failures_total`, `telco_churn_batch_scoring_failures_total`.
-- **Model Lifecycle**: `telco_churn_model_loads_total`, `telco_churn_model_load_failures_total`.
-
-### Quality & Data Drift Reporting
-- **Operational Quality Report**: Generated during batch validation, summarizing accepted/rejected records, schema check violations, duplicate records, and per-column missing values (`reports/quality/operational_quality_report.json`).
-- **Data Drift Report**: Compares scoring data against training reference dataset using Population Stability Index (PSI) and Kolmogorov-Smirnov (KS) tests (`reports/drift/drift_report.json`).
-  ```bash
-  uv run python scripts/run_drift_report.py
-  ```
-
-### Operational Runbook & Alert Policy
-- **Grafana Dashboard Template**: `docs/dashboards/grafana_dashboard.json` & `docs/dashboards/README.md`.
-- **Operational Runbook**: `docs/runbooks/operational_runbook.md` (triage for service startup, quarantine remediation, model load errors, drift alerts).
-- **Alert Policy**: `docs/alert_policy.md` (P1/P2 alert thresholds for API errors, validation failure spikes, significant drift).
-
-### 4. Prediction Endpoint (`POST /predict`)
-Predicts churn risk probability and binary risk class for a single customer snapshot.
-
-#### Example Request:
-```bash
-curl -X POST "http://localhost:8000/predict" \
+curl -X POST "http://127.0.0.1:8000/predict" \
   -H "Content-Type: application/json" \
   -H "X-Correlation-ID: req-abc-12345" \
   -d '{
@@ -341,55 +234,45 @@ curl -X POST "http://localhost:8000/predict" \
   }'
 ```
 
-#### Example Response:
-```json
-{
-  "churn_probability": 0.1245,
-  "predicted_class": 0,
-  "model_version": "1.0.0",
-  "correlation_id": "req-abc-12345",
-  "prediction_timestamp": "2026-07-29T19:54:00.000000+00:00"
-}
-```
+---
+
+## Measured Results
+
+Baseline logistic regression on the untouched test partition (\(N = 1{,}057\)):
+
+| Metric | Value |
+| --- | --- |
+| PR-AUC (primary) | 0.6437 |
+| ROC-AUC | 0.8487 |
+| Brier score | 0.1361 |
+| Precision @ 10% capacity | 75.47% |
+| Recall @ 10% capacity | 28.57% |
+| Capacity threshold | 0.6627 |
+
+Candidate comparison uses sklearn **GradientBoosting** (not LightGBM). Acceptance gates run on the **validation** split; final metrics are reported on **test**. In the current fixed-seed run, the candidate’s validation PR-AUC lift (`+0.0071`) missed the `+0.0100` gate, so **baseline logistic regression remains the selected and promoted serving model** despite stronger test-set ranking. See the [decision record](reports/evaluation/decision_record.md).
 
 ---
 
-## 📊 Measured Baseline Model Results
+## Observability
 
-Evaluated on an untouched holdout test partition ($N = 1,057$, 26.5% churn prevalence):
-
-| Metric | Measured Value | Description |
-| --- | --- | --- |
-| **PR-AUC (Primary)** | `0.6437` | Area under Precision-Recall Curve (ranking quality for churn class) |
-| **ROC-AUC** | `0.8487` | Receiver Operating Characteristic AUC |
-| **Brier Score** | `0.1361` | Mean squared probability error (calibration quality) |
-| **Precision @ 10% Capacity** | `75.47%` | Precision when targeting the highest-risk 10% of customer base |
-| **Recall @ 10% Capacity** | `28.57%` | Fraction of total churners captured within top 10% capacity |
-| **Capacity Risk Threshold** | `0.6627` | Probability threshold for top 10% campaign capacity |
-| **Accuracy @ 0.50 Threshold** | `79.85%` | Overall classification accuracy |
+- Structured JSON logs with correlation IDs; `customerID` / payloads redacted
+- Prometheus counters/histograms for API, batch, and model-load events
+- Quality report: `reports/quality/operational_quality_report.json`
+- Drift report: `uv run python scripts/run_drift_report.py`
+- Runbook / alerts: `docs/runbooks/operational_runbook.md`, `docs/alert_policy.md`
 
 ---
 
-## 🧪 Testing Guidelines
+## Future Improvements
 
-The test suite covers unit tests for modules, data contract verification, batch scoring edge cases, and API integration.
-
-```bash
-# Run code formatting check
-uv run ruff format --check .
-
-# Run linter
-uv run ruff check .
-
-# Run full test suite with coverage report
-uv run pytest
-
-# Run focused unit tests
-uv run pytest tests/unit -q
-```
+- Fit validation-chosen probability calibration into the shipped pipeline
+- Return carefully worded local reason codes without claiming causality
+- Replace random splits with out-of-time validation when dated data exists
+- Add authn/authz, TLS, and rate limiting for non-local deployments
+- Stronger CI (image build smoke) once artifacts are produced in the pipeline
 
 ---
 
-## 📄 License & Attribution
+## License
 
-This project uses the public IBM Telco Customer Churn dataset for demonstration and portfolio purposes. Licensed under the MIT License.
+MIT. Uses the public IBM Telco Customer Churn dataset for demonstration and portfolio purposes.

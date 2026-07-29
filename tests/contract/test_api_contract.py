@@ -8,12 +8,12 @@ from fastapi.testclient import TestClient
 
 from churn_prediction.api.app import create_app
 from churn_prediction.api.service import InferenceService
-from churn_prediction.features.pipeline import load_training_config
-from churn_prediction.models.serialization import save_artifacts
-from churn_prediction.models.trainer import (
+from churn_prediction.features.pipeline import (
     build_baseline_pipeline,
-    prepare_features_and_target,
+    load_training_config,
 )
+from churn_prediction.models.serialization import save_artifacts
+from churn_prediction.models.trainer import prepare_features_and_target
 
 
 @pytest.fixture
@@ -34,8 +34,8 @@ def trained_artifacts(tmp_path: Path, sample_valid_df):
         pipeline=pipeline,
         metadata=metadata,
         output_dir=tmp_path,
-        pipeline_filename="baseline_pipeline.joblib",
-        metadata_filename="baseline_metadata.json",
+        pipeline_filename="serving_pipeline.joblib",
+        metadata_filename="serving_metadata.json",
     )
     return tmp_path
 
@@ -198,8 +198,8 @@ def test_predict_endpoint_corrupted_model_handling(tmp_path, sample_customer_dic
     """Test POST /predict handling when model artifact file is corrupted."""
     corrupt_dir = tmp_path / "corrupt_dir"
     corrupt_dir.mkdir()
-    (corrupt_dir / "baseline_pipeline.joblib").write_text("invalid content")
-    meta_path = corrupt_dir / "baseline_metadata.json"
+    (corrupt_dir / "serving_pipeline.joblib").write_text("invalid content")
+    meta_path = corrupt_dir / "serving_metadata.json"
     meta_path.write_text(json.dumps({"model_name": "test"}))
 
     service = InferenceService(model_dir=corrupt_dir)

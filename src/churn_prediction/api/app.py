@@ -54,10 +54,10 @@ def create_app(
         service = InferenceService(
             model_dir=model_config.get("model_dir", "models"),
             pipeline_filename=model_config.get(
-                "pipeline_filename", "baseline_pipeline.joblib"
+                "pipeline_filename", "serving_pipeline.joblib"
             ),
             metadata_filename=model_config.get(
-                "metadata_filename", "baseline_metadata.json"
+                "metadata_filename", "serving_metadata.json"
             ),
             decision_threshold=float(scoring_config.get("decision_threshold", 0.50)),
         )

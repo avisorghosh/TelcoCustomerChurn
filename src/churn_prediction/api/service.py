@@ -34,8 +34,8 @@ class InferenceService:
     def __init__(
         self,
         model_dir: str | Path = "models",
-        pipeline_filename: str = "baseline_pipeline.joblib",
-        metadata_filename: str = "baseline_metadata.json",
+        pipeline_filename: str = "serving_pipeline.joblib",
+        metadata_filename: str = "serving_metadata.json",
         decision_threshold: float = 0.50,
     ) -> None:
         """Initialize InferenceService instance.

@@ -36,8 +36,8 @@ def load_serving_config(config_path: str | Path | None = None) -> dict[str, Any]
             "model_name": "baseline_logistic_regression",
             "model": {
                 "model_dir": "models",
-                "pipeline_filename": "baseline_pipeline.joblib",
-                "metadata_filename": "baseline_metadata.json",
+                "pipeline_filename": "serving_pipeline.joblib",
+                "metadata_filename": "serving_metadata.json",
             },
             "scoring": {
                 "decision_threshold": 0.50,

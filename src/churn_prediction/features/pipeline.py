@@ -88,7 +88,7 @@ def build_model_pipeline(config: dict[str, Any]) -> Pipeline:
     """Build scikit-learn training pipeline based on configuration settings.
 
     Combines ColumnTransformer preprocessor and specified classifier
-    (LogisticRegression or LightGBM).
+    (LogisticRegression or GradientBoosting).
 
     Args:
         config: Training configuration dictionary.
@@ -115,15 +115,6 @@ def build_model_pipeline(config: dict[str, Any]) -> Pipeline:
         from sklearn.ensemble import HistGradientBoostingClassifier
 
         classifier = HistGradientBoostingClassifier(**hyperparams)
-    elif m_type in ("lightgbm", "lgbm", "lgbmclassifier"):
-        try:
-            from lightgbm import LGBMClassifier
-
-            classifier = LGBMClassifier(**hyperparams)
-        except Exception:
-            from sklearn.ensemble import GradientBoostingClassifier
-
-            classifier = GradientBoostingClassifier(**hyperparams)
     elif m_type in ("logisticregression", "logistic_regression"):
         classifier = LogisticRegression(**hyperparams)
     else:

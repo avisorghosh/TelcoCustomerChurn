@@ -98,8 +98,16 @@ def test_deterministic_training_with_fixed_seed(
     config2["artifacts"] = config2.get("artifacts", {}).copy()
     config2["artifacts"]["output_dir"] = str(tmp_path / "run2")
 
-    pipeline1, meta1, _ = train_baseline(data_path_override=str(csv_path))
-    pipeline2, meta2, _ = train_baseline(data_path_override=str(csv_path))
+    pipeline1, meta1, _ = train_baseline(
+        data_path_override=str(csv_path),
+        log_to_mlflow=False,
+        output_dir_override=tmp_path / "run1",
+    )
+    pipeline2, meta2, _ = train_baseline(
+        data_path_override=str(csv_path),
+        log_to_mlflow=False,
+        output_dir_override=tmp_path / "run2",
+    )
 
     sample_customer = synthetic_dataset.iloc[:5].copy()
     preds1 = predict_churn(pipeline1, sample_customer)
@@ -109,10 +117,15 @@ def test_deterministic_training_with_fixed_seed(
     assert meta1["random_seed"] == meta2["random_seed"]
 
 
-def test_predict_churn_single_valid_customer(synthetic_dataset, sample_config):
+def test_predict_churn_single_valid_customer(
+    synthetic_dataset, sample_config, tmp_path
+):
     """Test predict_churn on a single valid customer input."""
-    X, y = prepare_features_and_target(synthetic_dataset, sample_config)
-    pipeline, _, _ = train_baseline(data_path_override="Telco-Customer-Churn.csv")
+    pipeline, _, _ = train_baseline(
+        data_path_override="Telco-Customer-Churn.csv",
+        log_to_mlflow=False,
+        output_dir_override=tmp_path / "models",
+    )
 
     single_row = synthetic_dataset.iloc[:1].copy()
     results = predict_churn(pipeline, single_row)

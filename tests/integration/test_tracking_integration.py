@@ -40,6 +40,7 @@ def test_full_mlflow_training_and_registry_integration(
         config_path=None,
         data_path_override="Telco-Customer-Churn.csv",
         log_to_mlflow=True,
+        output_dir_override=tmp_path / "models",
     )
 
     # 2. Verify MLflow run creation and lineage

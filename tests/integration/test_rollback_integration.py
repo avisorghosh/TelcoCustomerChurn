@@ -20,11 +20,19 @@ def test_end_to_end_model_rollback_integration(
     monkeypatch.setenv("MLFLOW_REGISTERED_MODEL_NAME", registered_model_name)
 
     # 1. Train version 1 (Baseline)
-    _, meta_v1, _ = train_baseline(data_path_override=raw_csv, log_to_mlflow=True)
+    _, meta_v1, _ = train_baseline(
+        data_path_override=raw_csv,
+        log_to_mlflow=True,
+        output_dir_override=tmp_path / "baseline_artifacts",
+    )
     assert meta_v1["model_name"] == "baseline_logistic_regression"
 
     # 2. Train version 2 (Candidate Gradient Boosting)
-    _, meta_v2, _ = train_candidate(data_path_override=raw_csv, log_to_mlflow=True)
+    _, meta_v2, _ = train_candidate(
+        data_path_override=raw_csv,
+        log_to_mlflow=True,
+        output_dir_override=tmp_path / "candidate_artifacts",
+    )
     assert meta_v2["model_name"] == "candidate_gradient_boosting"
 
     # 3. Roll back to MLflow version 1

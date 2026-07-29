@@ -43,7 +43,10 @@ def main() -> None:
         )
 
         final_decision = decision_record.get("final_decision", {})
-        metrics_diff = decision_record.get("metrics_summary", {}).get(
+        selection_diff = decision_record.get("selection_metrics_summary", {}).get(
+            "difference_candidate_minus_baseline", {}
+        )
+        test_diff = decision_record.get("metrics_summary", {}).get(
             "difference_candidate_minus_baseline", {}
         )
 
@@ -51,8 +54,10 @@ def main() -> None:
         print("--------------------------------------------------")
         print(f"Selected Model: {final_decision.get('selected_model_name')}")
         print(f"Model Type:     {final_decision.get('selected_model_type')}")
-        print(f"PR-AUC Diff:    {metrics_diff.get('pr_auc'):+.4f}")
-        print(f"Brier Diff:     {metrics_diff.get('brier_score'):+.4f}")
+        print(f"Val PR-AUC Diff (gates): {selection_diff.get('pr_auc'):+.4f}")
+        print(f"Val Brier Diff (gates):  {selection_diff.get('brier_score'):+.4f}")
+        print(f"Test PR-AUC Diff:       {test_diff.get('pr_auc'):+.4f}")
+        print(f"Test Brier Diff:        {test_diff.get('brier_score'):+.4f}")
         print(f"JSON Record:    {output_paths['decision_record_json']}")
         print(f"Markdown Record:{output_paths['decision_record_md']}")
         print("--------------------------------------------------")

@@ -16,7 +16,9 @@ def test_restore_model_from_dir_success(tmp_path, synthetic_dataset):
     target_dir = tmp_path / "target_active"
 
     pipeline, metadata, _ = train_baseline(
-        data_path_override=raw_csv, log_to_mlflow=False
+        data_path_override=raw_csv,
+        log_to_mlflow=False,
+        output_dir_override=tmp_path / "train_artifacts",
     )
     save_artifacts(pipeline, metadata, output_dir=source_dir)
 

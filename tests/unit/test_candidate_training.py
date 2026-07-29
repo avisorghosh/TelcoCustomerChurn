@@ -16,11 +16,9 @@ def test_build_model_pipeline_supported_types():
     """Verify build_model_pipeline instantiates appropriate scikit-learn classifiers."""
     base_config = load_training_config()
 
-    # LogisticRegression
     lr_pipe = build_model_pipeline(base_config)
     assert lr_pipe.named_steps["classifier"].__class__.__name__ == "LogisticRegression"
 
-    # GradientBoosting
     gb_config = base_config.copy()
     gb_config["model"] = {
         "type": "GradientBoosting",
@@ -46,13 +44,13 @@ def test_train_candidate_creates_artifacts_and_metadata(synthetic_dataset, tmp_p
     """Verify train_candidate trains candidate model and persists expected artifacts."""
     csv_path = tmp_path / "sample_data.csv"
     synthetic_dataset.to_csv(csv_path, index=False)
-
-    cand_config_path = Path("configs/candidate_training.yaml")
+    model_dir = tmp_path / "models"
 
     pipeline, metadata, artifact_paths = train_candidate(
-        config_path=cand_config_path,
+        config_path=Path("configs/candidate_training.yaml"),
         data_path_override=csv_path,
         log_to_mlflow=False,
+        output_dir_override=model_dir,
     )
 
     assert pipeline is not None
@@ -61,6 +59,7 @@ def test_train_candidate_creates_artifacts_and_metadata(synthetic_dataset, tmp_p
     assert "training_metrics" in metadata
     assert Path(artifact_paths["pipeline_path"]).exists()
     assert Path(artifact_paths["metadata_path"]).exists()
+    assert model_dir in Path(artifact_paths["pipeline_path"]).parents
 
 
 def test_candidate_training_deterministic_execution(synthetic_dataset, tmp_path):
@@ -68,22 +67,19 @@ def test_candidate_training_deterministic_execution(synthetic_dataset, tmp_path)
     csv_path = tmp_path / "sample_data.csv"
     synthetic_dataset.to_csv(csv_path, index=False)
 
-    cand_config_path = Path("configs/candidate_training.yaml")
-
     pipe1, _, _ = train_candidate(
-        config_path=cand_config_path,
+        config_path=Path("configs/candidate_training.yaml"),
         data_path_override=csv_path,
         log_to_mlflow=False,
+        output_dir_override=tmp_path / "run1",
     )
-
     pipe2, _, _ = train_candidate(
-        config_path=cand_config_path,
+        config_path=Path("configs/candidate_training.yaml"),
         data_path_override=csv_path,
         log_to_mlflow=False,
+        output_dir_override=tmp_path / "run2",
     )
 
-    # Validate predictions on same dataset match exactly
     prob1 = pipe1.predict_proba(synthetic_dataset)[:, 1]
     prob2 = pipe2.predict_proba(synthetic_dataset)[:, 1]
-
     np.testing.assert_allclose(prob1, prob2, rtol=1e-5, atol=1e-5)

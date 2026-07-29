@@ -11,6 +11,10 @@ from churn_prediction.models.batch_scoring import (
     score_batch,
     validate_scoring_batch,
 )
+from churn_prediction.models.promote import (
+    PromotionError,
+    promote_selected_model,
+)
 from churn_prediction.models.restore import (
     restore_model_from_dir,
     restore_model_from_registry,
@@ -45,6 +49,8 @@ __all__ = [
     "load_artifacts",
     "restore_model_from_registry",
     "restore_model_from_dir",
+    "PromotionError",
+    "promote_selected_model",
     "BatchScoringError",
     "BatchValidationError",
     "ModelLoadError",

@@ -26,7 +26,9 @@ WORKDIR /app
 # Copy isolated virtual environment from builder stage
 COPY --from=builder --chown=appuser:appgroup /install /app/.venv
 
-# Copy application source, configs, scripts, and pre-trained model artifacts
+# Copy application source, configs, and scripts.
+# Model artifacts under models/ are gitignored. Train + promote before `docker build`
+# so serving_pipeline.joblib exists, or mount ./models at runtime.
 COPY --chown=appuser:appgroup src /app/src
 COPY --chown=appuser:appgroup configs /app/configs
 COPY --chown=appuser:appgroup scripts /app/scripts
@@ -41,6 +43,8 @@ ENV PATH="/app/.venv/bin:$PATH" \
     CHURN_API_HOST=0.0.0.0 \
     CHURN_API_PORT=8000 \
     CHURN_MODEL_DIR=/app/models \
+    CHURN_PIPELINE_FILENAME=serving_pipeline.joblib \
+    CHURN_METADATA_FILENAME=serving_metadata.json \
     CHURN_DECISION_THRESHOLD=0.50
 
 # Switch to non-root container user
