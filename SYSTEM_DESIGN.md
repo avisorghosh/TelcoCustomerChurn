@@ -31,8 +31,8 @@ One row represents a Telco customer snapshot. `Churn` is the binary outcome: `Ye
 - `No internet service` and `No phone service` are valid categories. Collapsing them into missing values destroys information.
 - The static dataset lacks event dates, scoring timestamps, churn dates, source-system lineage, intervention labels, and explicit prediction horizon. It cannot prove temporal generalization or treatment impact.
 - The target is imbalanced (26.5% `Yes` / 73.5% `No`). Accuracy is therefore inadequate as a primary selection metric.
-- This is a small, public benchmark dataset; it is suitable for demonstrating engineering patterns, not for asserting production performance or causal business impact.
 - `gender` and `SeniorCitizen` are sensitive/fairness-relevant attributes. Exclude them from the initial candidate model unless a documented business/legal review supports inclusion; retain only for carefully governed fairness evaluation where permitted.
+- *Milestone 3 Empirical EDA Validation:* The exploratory data analysis empirically confirmed all of the above assumptions. Specifically: all 11 blank `TotalCharges` records belong to 0-tenure customers; target churn rate is 26.54% (imbalance ratio 2.77:1); `gender` shows negligible churn rate disparity (<0.8%); `TotalCharges` correlates strongly with `tenure` (r=0.83) with an average $45.09 absolute discrepancy from `tenure × MonthlyCharges`.
 
 ## 2. Business problem
 
