@@ -93,7 +93,12 @@ class InferenceService:
 
     @property
     def model_version(self) -> str:
-        """Return model version string from loaded metadata."""
+        """Return model version string from loaded metadata or environment override."""
+        import os
+
+        env_version = os.getenv("CHURN_MODEL_VERSION")
+        if env_version:
+            return env_version
         if self.metadata and "schema_version" in self.metadata:
             return str(self.metadata["schema_version"])
         if self.metadata and "model_name" in self.metadata:

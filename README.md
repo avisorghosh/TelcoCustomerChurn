@@ -1,114 +1,303 @@
-# Customer Churn Prediction
+# Customer Churn Prediction System
 
-A production-oriented machine learning system for identifying IBM Telco customers at risk of churn. This repository is intentionally designed as an ML product, not a notebook-only modelling exercise: data contracts, reproducible training, deployable scoring, observability, and safe model promotion are first-class concerns.
+A production-oriented machine learning product designed to identify IBM Telco customers at risk of churn. Built with software engineering rigor, explicit data contracts, reproducible pipelines, batch scoring, FastAPI serving, and containerization.
 
-## Project status
+---
 
-**In development — Milestone 7 (API Service) is complete and Container & Portfolio Polish is next.** This repository is being built as a portfolio project: it will demonstrate a reproducible, tested churn-risk workflow without claiming production performance or causal business impact. See [TASKS.md](TASKS.md) for independently testable milestones and [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) for the architecture and assumptions.
+## 📌 Project Overview
 
-## Local development
+This repository demonstrates an end-to-end Machine Learning System built as a production-quality product. Rather than focusing solely on offline modeling in Jupyter notebooks, it implements a robust, modular, and maintainable pipeline covering data contract validation, stratified baseline training, probability calibration, capacity-constrained batch scoring, REST API serving, and containerized deployment.
 
-This project targets Python 3.11 and uses [uv](https://docs.astral.sh/uv/) for a locked, reproducible environment. From a clean checkout:
+### Key Highlights
+- **Data Contract Enforcement**: Ingestion validation using Pandera schemas and custom domain checks (rejecting duplicate IDs, invalid types, and malformed fields).
+- **Reproducible Pipelines**: scikit-learn `Pipeline` and `ColumnTransformer` models with strict split protocols (70% train, 15% val, 15% test) avoiding data leakage.
+- **Business-First Evaluation**: Optimized for Precision-Recall AUC (PR-AUC) and capacity-constrained campaign thresholds (top 10% target allocation) rather than naive 0.5 accuracy.
+- **Idempotent Batch Scoring**: Versioned batch scoring pipeline producing deterministic customer worklists and quarantining malformed data without partial writes.
+- **REST Inference API**: FastAPI application serving single-customer risk predictions with correlation ID tracing, health/readiness probes, and error handling.
+- **Production Containerization**: Multi-stage, non-root Docker runtime with deterministic dependency locks (`uv.lock`) and configurable environment variables.
 
-```bash
-uv sync --locked
-uv run ruff format --check .
-uv run ruff check .
-uv run pytest
-uv run python scripts/run_eda.py         # Run reproducible EDA pipeline and export plots
-uv run python scripts/train_baseline.py # Train baseline model and save pipeline artifacts
-uv run python scripts/evaluate_baseline.py # Evaluate baseline model and generate metrics/plots
-uv run python scripts/predict_baseline.py # Load trained pipeline and validate inference
-uv run python scripts/validate_scoring_input.py # Validate input dataset against data contract
-uv run python scripts/run_batch_scoring.py # Execute batch scoring pipeline
-uv run python scripts/generate_scoring_output.py # Generate versioned predictions output CSV
-uv run python scripts/run_api.py         # Launch local FastAPI inference service
+---
+
+## 🏗 System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Data Layer
+        A[Raw Customer CSV\nTelco-Customer-Churn.csv] --> B[Data Contract Validator\nPandera Schema & Manifest]
+        B --> C[Validated Snapshot]
+    end
+
+    subgraph Offline ML Pipeline
+        C --> D[Stratified Splitter\n70% Train / 15% Val / 15% Test]
+        D --> E[Preprocessing & Trainer\nColumnTransformer + LogisticRegression]
+        E --> F[Evaluation Contract\nPR-AUC, Calibration & Top 10% Capacity]
+        F --> G[Artifact Store\nmodels/baseline_pipeline.joblib\nmodels/baseline_metadata.json]
+    end
+
+    subgraph Batch Scoring
+        C --> H[Batch Scoring Engine\nchurn_prediction.models.batch_scoring]
+        G --> H
+        H --> I[Versioned Output CSV\nreports/scoring/batch_predictions.csv]
+    end
+
+    subgraph Serving & Deployment
+        G --> J[Inference Service\nchurn_prediction.api.service]
+        J --> K[FastAPI Web Application\nchurn_prediction.api.app]
+        K --> L[Docker Container Runtime\nMulti-stage slim container]
+        L --> M["API Endpoints\nGET /health\nGET /ready\nPOST /predict"]
+    end
 ```
 
-To run only the unit tests:
+---
+
+## 📂 Repository Structure
+
+```text
+.
+├── Dockerfile                  # Multi-stage production container setup
+├── .dockerignore               # Docker build context exclusions
+├── AGENTS.md                   # Repository engineering rules & guidelines
+├── SYSTEM_DESIGN.md            # Detailed system design specification
+├── TASKS.md                    # Milestone-based delivery tracking
+├── pyproject.toml              # Project configuration & dependencies
+├── uv.lock                     # Deterministic dependency lockfile
+├── configs/                    # Versioned YAML configurations
+│   ├── data_contract.yaml
+│   ├── evaluation.yaml
+│   ├── serving.yaml
+│   └── training.yaml
+├── models/                     # Persisted model artifacts (ignored by Git)
+│   ├── baseline_metadata.json
+│   └── baseline_pipeline.joblib
+├── reports/                    # Generated metrics, plots & quarantine outputs
+│   ├── evaluation/
+│   ├── quarantine/
+│   └── scoring/
+├── scripts/                    # Thin operator entry points
+│   ├── run_eda.py
+│   ├── train_baseline.py
+│   ├── evaluate_baseline.py
+│   ├── validate_scoring_input.py
+│   ├── run_batch_scoring.py
+│   └── run_api.py
+├── src/churn_prediction/       # Main Python application package
+│   ├── api/                    # FastAPI app, schemas, config & service
+│   ├── data/                   # Contract schema & Pandera validation
+│   ├── eda/                    # Analysis & plotting pipeline
+│   ├── evaluation/             # Metrics, calibration & capacity evaluation
+│   ├── features/               # scikit-learn preprocessing pipeline
+│   └── models/                 # Model trainer, serialization & batch engine
+├── tests/                      # Comprehensive test suite
+│   ├── contract/               # Input contract & API schema tests
+│   ├── integration/            # Pipeline & container integration tests
+│   └── unit/                   # Modular unit tests
+└── infra/                      # Infrastructure & container configs
+    └── Dockerfile
+```
+
+---
+
+## ⚡ Quick Start & Development Workflow
+
+### Prerequisites
+- Python 3.11+
+- [uv](https://docs.astral.sh/uv/) dependency manager
+- Docker (optional, for containerized serving)
+
+### 1. Environment Setup
 
 ```bash
+# Clone the repository
+git clone https://github.com/avisorghosh/TelcoCustomerChurn.git
+cd TelcoCustomerChurn
+
+# Create locked development environment
+uv sync --locked
+```
+
+### 2. Pipeline Execution Commands
+
+Run the complete pipeline from data validation to local API serving:
+
+```bash
+# 1. Validate raw data against data contract
+uv run python scripts/validate_scoring_input.py --input-path Telco-Customer-Churn.csv
+
+# 2. Run exploratory data analysis and export plots
+uv run python scripts/run_eda.py
+
+# 3. Train baseline model pipeline and persist artifacts
+uv run python scripts/train_baseline.py
+
+# 4. Evaluate baseline model performance and generate evaluation metrics/plots
+uv run python scripts/evaluate_baseline.py
+
+# 5. Execute batch scoring pipeline
+uv run python scripts/run_batch_scoring.py
+
+# 6. Launch local FastAPI inference service
+uv run python scripts/run_api.py --host 127.0.0.1 --port 8000
+```
+
+---
+
+## 🐳 Docker Container Workflow
+
+The service is packaged into a production-ready, multi-stage Docker container built on `python:3.11-slim` running as a non-root user (`appuser` UID 10001).
+
+### Build Image
+
+```bash
+docker build -t telco-churn-api:latest .
+```
+
+### Run Container
+
+```bash
+docker run -d \
+  --name churn-api \
+  -p 8000:8000 \
+  -e CHURN_DECISION_THRESHOLD=0.50 \
+  telco-churn-api:latest
+```
+
+### Environment Variable Configuration
+
+The container and API service support flexible runtime configuration:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `CHURN_API_HOST` / `HOST` | `0.0.0.0` | Binding host address for FastAPI server |
+| `CHURN_API_PORT` / `PORT` | `8000` | Port number to expose service on |
+| `CHURN_MODEL_DIR` | `/app/models` | Directory path containing model artifacts |
+| `CHURN_PIPELINE_FILENAME` | `baseline_pipeline.joblib` | Model pipeline filename |
+| `CHURN_METADATA_FILENAME` | `baseline_metadata.json` | Model metadata filename |
+| `CHURN_DECISION_THRESHOLD` | `0.50` | Prediction probability threshold for class assignment |
+| `CHURN_MODEL_VERSION` | Metadata version | Model version string returned in prediction responses |
+| `CHURN_CONFIG_PATH` | `configs/serving.yaml` | Path to custom YAML serving config |
+
+### Stop Container
+
+```bash
+docker stop churn-api
+docker rm churn-api
+```
+
+---
+
+## 🚀 API Endpoint Specifications
+
+### 1. Health Probe (`GET /health`)
+Returns general service status and model loading state.
+
+```bash
+curl http://localhost:8000/health
+```
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "model_loaded": true
+}
+```
+
+### 2. Readiness Probe (`GET /ready`)
+Returns `200 OK` when ready to serve inference requests, or `503 Service Unavailable` if model artifact is missing/unloaded.
+
+```bash
+curl http://localhost:8000/ready
+```
+
+**Response:**
+```json
+{
+  "status": "ready",
+  "model_loaded": true
+}
+```
+
+### 3. Prediction Endpoint (`POST /predict`)
+Predicts churn risk probability and binary risk class for a single customer snapshot.
+
+#### Example Request:
+```bash
+curl -X POST "http://localhost:8000/predict" \
+  -H "Content-Type: application/json" \
+  -H "X-Correlation-ID: req-abc-12345" \
+  -d '{
+    "customerID": "7590-VHVEG",
+    "gender": "Female",
+    "SeniorCitizen": 0,
+    "Partner": "Yes",
+    "Dependents": "No",
+    "tenure": 12,
+    "PhoneService": "Yes",
+    "MultipleLines": "No",
+    "InternetService": "DSL",
+    "OnlineSecurity": "Yes",
+    "OnlineBackup": "No",
+    "DeviceProtection": "No",
+    "TechSupport": "Yes",
+    "StreamingTV": "No",
+    "StreamingMovies": "No",
+    "Contract": "One year",
+    "PaperlessBilling": "No",
+    "PaymentMethod": "Mailed check",
+    "MonthlyCharges": 55.85,
+    "TotalCharges": 670.20
+  }'
+```
+
+#### Example Response:
+```json
+{
+  "churn_probability": 0.1245,
+  "predicted_class": 0,
+  "model_version": "1.0.0",
+  "correlation_id": "req-abc-12345",
+  "prediction_timestamp": "2026-07-29T19:54:00.000000+00:00"
+}
+```
+
+---
+
+## 📊 Measured Baseline Model Results
+
+Evaluated on an untouched holdout test partition ($N = 1,057$, 26.5% churn prevalence):
+
+| Metric | Measured Value | Description |
+| --- | --- | --- |
+| **PR-AUC (Primary)** | `0.6437` | Area under Precision-Recall Curve (ranking quality for churn class) |
+| **ROC-AUC** | `0.8487` | Receiver Operating Characteristic AUC |
+| **Brier Score** | `0.1361` | Mean squared probability error (calibration quality) |
+| **Precision @ 10% Capacity** | `75.47%` | Precision when targeting the highest-risk 10% of customer base |
+| **Recall @ 10% Capacity** | `28.57%` | Fraction of total churners captured within top 10% capacity |
+| **Capacity Risk Threshold** | `0.6627` | Probability threshold for top 10% campaign capacity |
+| **Accuracy @ 0.50 Threshold** | `79.85%` | Overall classification accuracy |
+
+---
+
+## 🧪 Testing Guidelines
+
+The test suite covers unit tests for modules, data contract verification, batch scoring edge cases, and API integration.
+
+```bash
+# Run code formatting check
+uv run ruff format --check .
+
+# Run linter
+uv run ruff check .
+
+# Run full test suite with coverage report
+uv run pytest
+
+# Run focused unit tests
 uv run pytest tests/unit -q
 ```
 
-The initial package is deliberately a smoke-test foundation. Data validation, modelling, APIs, and artifact generation are introduced in later milestones.
+---
 
-## Business goal
+## 📄 License & Attribution
 
-Rank currently active customers by their probability of churning within the agreed prediction horizon (initially: the next billing cycle). Retention teams can use the ranking to prioritize outreach and offers. The model supports decisions; it must not automatically change a customer's plan or eligibility.
-
-The initial operating point should optimize expected retention value under a finite intervention budget, rather than optimize accuracy. A useful decision metric is:
-
-`expected incremental value = P(churn) × P(save | intervention) × customer value − intervention cost`
-
-Because this historical dataset contains outcomes but not intervention/campaign outcomes, the first release estimates churn risk only. Uplift or treatment-effect modelling is a future capability, not a claim the first model can make.
-
-## Dataset
-
-Source file: `Telco-Customer-Churn.csv` (IBM Telco Customer Churn dataset), 7,043 rows and 21 columns.
-
-| Role | Columns |
-| --- | --- |
-| Identifier | `customerID` (never a predictive feature) |
-| Target | `Churn` (`Yes` / `No`) |
-| Numeric | `tenure`, `MonthlyCharges`, `TotalCharges` after type conversion |
-| Categorical / ordinal-as-category | all remaining fields, including binary `SeniorCitizen` |
-
-Observed data issue: `TotalCharges` is stored as text and has 11 blank values (likely very new customers with zero tenure). The target distribution is 1,869 churned customers (26.5%) and 5,174 retained customers (73.5%).
-
-### Provenance and handling
-
-The included CSV is a public learning dataset, retained only to make the portfolio project reproducible. Before publishing the repository, document its original source URL and licence in `docs/data_provenance.md`, record its SHA-256 checksum in a source manifest, and confirm redistribution is permitted. Do not add real customer data, credentials, or generated model artifacts to Git.
-
-For a real deployment, raw source extracts belong in an access-controlled data store and are referenced by a versioned manifest rather than committed to the repository.
-
-## Portfolio assumptions
-
-The source dataset has no scoring timestamps, intervention history, or campaign economics. To make the first release concrete without overstating what the data proves, the project uses these explicit demonstration assumptions:
-
-- Score a static customer snapshot weekly as a proxy for next-billing-cycle churn risk.
-- Prioritize the highest-risk 10% of eligible customers; make this capacity configurable rather than hard-coded.
-- Produce risk scores only. Campaign eligibility, offers, retention value, and intervention cost are outside the model and require real business data.
-- Exclude `gender` and `SeniorCitizen` from model inputs; use them only for governed, optional segmented evaluation.
-
-These are implementation defaults, not claims about an operating telecom business.
-
-## Design principles
-
-- Prevent leakage: use only information available at scoring time and split data before fitting transformations.
-- Prefer a reproducible, inspectable baseline before complexity.
-- Version data, code, features, parameters, metrics, and model artifacts together.
-- Separate offline training from online serving.
-- Treat probability calibration, thresholding, and business capacity as release requirements.
-- Keep personally identifying or operationally sensitive data out of logs and model features unless justified.
-
-## Proposed delivery
-
-The first portfolio release will validate data, train a scikit-learn pipeline, evaluate calibrated churn-risk probabilities at configurable campaign capacity, produce a versioned batch-scoring worklist, expose a small FastAPI service, package it with Docker, and validate it in CI. Batch scoring is the recommended initial deployment; the API remains useful for controlled single-customer use and integration testing.
-
-MLflow tracking, a registry workflow, boosted-model comparison, and monitoring are deliberate follow-on enhancements once the end-to-end baseline is complete and tested.
-
-## Repository map (planned)
-
-```text
-src/churn_prediction/      Application and ML package
-tests/                     Unit, integration, and contract tests
-configs/                   Versioned training/serving configuration
-data/                      Local, ignored data staging areas
-notebooks/                 Exploratory work only; no production logic
-models/                    Local, ignored artifacts for development
-docs/                      Data contract, runbooks, decision records
-scripts/                   Explicit operator entry points
-infra/                     Container/deployment and monitoring assets
-```
-
-## Documentation
-
-- [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md): data dictionary, requirements, architecture, and stack rationale.
-- [TASKS.md](TASKS.md): small, verifiable delivery milestones.
-- `docs/data_provenance.md` (planned): dataset source, licence, checksum, and acquisition steps.
-- `docs/model_card.md` (planned): final model metrics, limitations, and intended use.
-
-## What will make this portfolio-ready
-
-The finished repository will include a quick-start guide, reproducible commands, test and CI status, an architecture diagram, a sample scoring response, measured model results, and a transparent model card. Until those artifacts exist, this repository should be described as an in-progress ML engineering project rather than a deployed product.
+This project uses the public IBM Telco Customer Churn dataset for demonstration and portfolio purposes. Licensed under the MIT License.
