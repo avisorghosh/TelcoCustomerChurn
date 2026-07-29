@@ -1,0 +1,55 @@
+schema_version: "1.0.0"
+
+logging:
+  level: "INFO"
+  format: "json"
+  privacy_safe: true
+  sensitive_keys:
+    - "customerID"
+    - "gender"
+    - "raw_payload"
+    - "customer_record"
+    - "features"
+
+metrics:
+  enabled: true
+  endpoint_path: "/metrics"
+  namespace: "telco_churn"
+
+data_quality:
+  output_dir: "reports/quality"
+  report_filename: "operational_quality_report.json"
+
+drift:
+  output_dir: "reports/drift"
+  report_filename: "drift_report.json"
+  reference_data_path: "Telco-Customer-Churn.csv"
+  thresholds:
+    psi_warning: 0.10
+    psi_critical: 0.25
+    ks_alpha: 0.05
+    missing_rate_delta: 0.05
+  numerical_features:
+    - "tenure"
+    - "MonthlyCharges"
+    - "TotalCharges"
+  categorical_features:
+    - "Contract"
+    - "InternetService"
+    - "PaymentMethod"
+    - "OnlineSecurity"
+    - "TechSupport"
+    - "PaperlessBilling"
+    - "PhoneService"
+    - "MultipleLines"
+    - "OnlineBackup"
+    - "DeviceProtection"
+    - "StreamingTV"
+    - "StreamingMovies"
+    - "Partner"
+    - "Dependents"
+
+alert_policy:
+  error_rate_threshold: 0.05
+  validation_failure_rate_threshold: 0.05
+  drift_status_threshold: "significant_drift"

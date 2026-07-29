@@ -254,7 +254,39 @@ curl http://localhost:8000/ready
 }
 ```
 
-### 3. Prediction Endpoint (`POST /predict`)
+### 3. Prometheus Metrics Endpoint (`GET /metrics`)
+Exposes Prometheus operational and model performance metrics.
+
+```bash
+curl http://localhost:8000/metrics
+```
+
+---
+
+## 🔍 System Observability, Monitoring & Operations
+
+### Structured Privacy-Safe Logging
+- Emits structured JSON log lines containing `timestamp`, `level`, `event`, `correlation_id`, `model_version`, and context.
+- **Privacy Safety**: Automatically redacts sensitive fields (`customerID`, `gender`, raw features payload, PII).
+
+### Prometheus Metrics
+- **API Metrics**: `telco_churn_api_requests_total`, `telco_churn_api_request_duration_seconds`, `telco_churn_predictions_total`, `telco_churn_prediction_failures_total`.
+- **Batch Scoring Metrics**: `telco_churn_batch_scoring_records_total` (accepted/rejected), `telco_churn_batch_scoring_validation_failures_total`, `telco_churn_batch_scoring_failures_total`.
+- **Model Lifecycle**: `telco_churn_model_loads_total`, `telco_churn_model_load_failures_total`.
+
+### Quality & Data Drift Reporting
+- **Operational Quality Report**: Generated during batch validation, summarizing accepted/rejected records, schema check violations, duplicate records, and per-column missing values (`reports/quality/operational_quality_report.json`).
+- **Data Drift Report**: Compares scoring data against training reference dataset using Population Stability Index (PSI) and Kolmogorov-Smirnov (KS) tests (`reports/drift/drift_report.json`).
+  ```bash
+  uv run python scripts/run_drift_report.py
+  ```
+
+### Operational Runbook & Alert Policy
+- **Grafana Dashboard Template**: `docs/dashboards/grafana_dashboard.json` & `docs/dashboards/README.md`.
+- **Operational Runbook**: `docs/runbooks/operational_runbook.md` (triage for service startup, quarantine remediation, model load errors, drift alerts).
+- **Alert Policy**: `docs/alert_policy.md` (P1/P2 alert thresholds for API errors, validation failure spikes, significant drift).
+
+### 4. Prediction Endpoint (`POST /predict`)
 Predicts churn risk probability and binary risk class for a single customer snapshot.
 
 #### Example Request:

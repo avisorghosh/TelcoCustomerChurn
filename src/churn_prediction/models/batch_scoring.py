@@ -5,6 +5,7 @@ quarantine error handling, and output generation for batch scoring datasets.
 """
 
 import json
+import logging
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,6 +18,13 @@ from sklearn.pipeline import Pipeline
 from churn_prediction.data.contract import ValidationReport
 from churn_prediction.data.validator import validate_data
 from churn_prediction.models.serialization import load_artifacts
+from churn_prediction.monitoring import (
+    generate_quality_report,
+    log_event,
+    metrics_manager,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class BatchScoringError(Exception):
@@ -225,13 +233,13 @@ def run_batch_scoring(
     batch_id_override: str | None = None,
     decision_threshold_override: float | None = None,
 ) -> tuple[pd.DataFrame, Path]:
-    """Execute complete end-to-end batch scoring pipeline.
+    """Execute complete end-to-end batch scoring pipeline with observability.
 
     Steps:
       1. Load serving configuration.
       2. Load model pipeline and metadata (wrap errors in ModelLoadError).
       3. Read input dataset CSV (fail fast if unreadable).
-      4. Validate dataset against data contract.
+      4. Validate dataset against data contract & generate operational quality report.
       5. If validation fails: quarantine batch and raise BatchValidationError.
       6. If validation passes: score all rows and write predictions output CSV.
 
@@ -252,6 +260,15 @@ def run_batch_scoring(
         batch_id_override
         or config.get("scoring", {}).get("batch_id")
         or generate_batch_id(prefix=batch_prefix)
+    )
+
+    log_event(
+        logger,
+        logging.INFO,
+        event="batch_scoring_started",
+        message="Starting batch scoring pipeline execution",
+        batch_id=batch_id,
+        input_path=str(input_path),
     )
 
     # Resolve paths from config
@@ -287,10 +304,28 @@ def run_batch_scoring(
             metadata_filename=metadata_fn,
         )
     except FileNotFoundError as exc:
+        metrics_manager.record_batch_failure()
+        log_event(
+            logger,
+            logging.ERROR,
+            event="batch_scoring_failed",
+            message="Model artifact missing for batch scoring",
+            batch_id=batch_id,
+            error=str(exc),
+        )
         raise ModelLoadError(
             f"Model artifact file not found in '{model_dir_path}': {exc}"
         ) from exc
     except Exception as exc:
+        metrics_manager.record_batch_failure()
+        log_event(
+            logger,
+            logging.ERROR,
+            event="batch_scoring_failed",
+            message="Failed to load model artifacts for batch scoring",
+            batch_id=batch_id,
+            error=str(exc),
+        )
         raise ModelLoadError(
             f"Failed to load model artifacts from '{model_dir_path}': {exc}"
         ) from exc
@@ -302,16 +337,32 @@ def run_batch_scoring(
     # Read input data
     inp_p = Path(input_path)
     if not inp_p.is_file():
+        metrics_manager.record_batch_failure()
         raise FileNotFoundError(f"Input batch file not found at: {inp_p}")
 
     try:
         raw_df = pd.read_csv(inp_p)
     except Exception as exc:
+        metrics_manager.record_batch_failure()
+        log_event(
+            logger,
+            logging.ERROR,
+            event="batch_scoring_failed",
+            message="Failed to read input batch CSV file",
+            batch_id=batch_id,
+            error=str(exc),
+        )
         raise BatchScoringError(
             f"Failed to read input CSV file '{inp_p}': {exc}"
         ) from exc
 
-    # Validate data
+    # Generate operational quality report and validate data
+    quality_report = generate_quality_report(
+        raw_df,
+        contract_config_path=contract_config_path,
+        is_training=False,
+    )
+
     parsed_df, report = validate_scoring_batch(
         raw_df,
         contract_config_path=contract_config_path,
@@ -323,6 +374,16 @@ def run_batch_scoring(
             report=report,
             quarantine_dir=quarantine_dir,
             batch_id=batch_id,
+        )
+        log_event(
+            logger,
+            logging.WARNING,
+            event="batch_validation_failed",
+            message="Batch scoring dataset failed contract validation",
+            batch_id=batch_id,
+            total_records=quality_report.total_records,
+            rejected_records=quality_report.rejected_records,
+            quarantine_path=str(quarantine_path),
         )
         raise BatchValidationError(
             f"Batch validation failed for batch '{batch_id}'. "
@@ -350,8 +411,28 @@ def run_batch_scoring(
         final_output_path.parent.mkdir(parents=True, exist_ok=True)
         scored_df.to_csv(final_output_path, index=False)
     except Exception as exc:
+        metrics_manager.record_batch_failure()
+        log_event(
+            logger,
+            logging.ERROR,
+            event="batch_scoring_failed",
+            message="Failed to write output predictions CSV",
+            batch_id=batch_id,
+            error=str(exc),
+        )
         raise BatchScoringError(
             f"Failed to write predictions to output file '{final_output_path}': {exc}"
         ) from exc
+
+    log_event(
+        logger,
+        logging.INFO,
+        event="batch_scoring_completed",
+        message="Batch scoring pipeline completed successfully",
+        batch_id=batch_id,
+        model_version=model_version,
+        record_count=len(scored_df),
+        output_path=str(final_output_path),
+    )
 
     return scored_df, final_output_path

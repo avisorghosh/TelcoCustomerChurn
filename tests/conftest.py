@@ -124,4 +124,3 @@ def synthetic_dataset() -> pd.DataFrame:
             }
         )
     return pd.DataFrame(rows)
-

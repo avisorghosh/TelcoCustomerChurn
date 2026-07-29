@@ -11,6 +11,7 @@ from sklearn.pipeline import Pipeline
 
 from churn_prediction.api.schemas import CustomerRecord, PredictionResponse
 from churn_prediction.models.serialization import load_artifacts
+from churn_prediction.monitoring import log_event, metrics_manager
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,13 @@ class InferenceService:
         Returns:
             True if model loaded successfully, False otherwise.
         """
+        log_event(
+            logger,
+            logging.INFO,
+            event="model_loading_started",
+            message="Initiating model artifact loading",
+            model_dir=str(self.model_dir),
+        )
         try:
             pipeline, metadata = load_artifacts(
                 output_dir=self.model_dir,
@@ -78,17 +86,39 @@ class InferenceService:
             self.metadata = metadata
             self.is_loaded = True
             self.load_error = None
-            logger.info("Successfully loaded model artifact from '%s'", self.model_dir)
+
+            metrics_manager.record_model_load(success=True)
+            log_event(
+                logger,
+                logging.INFO,
+                event="model_loading_success",
+                message="Successfully loaded model artifact",
+                model_version=self.model_version,
+            )
             return True
         except FileNotFoundError as e:
             self.is_loaded = False
             self.load_error = f"Model artifact missing: {e}"
-            logger.warning(self.load_error)
+            metrics_manager.record_model_load(success=False)
+            log_event(
+                logger,
+                logging.WARNING,
+                event="model_loading_failed",
+                message="Model artifact file missing",
+                error=str(e),
+            )
             return False
         except Exception as e:
             self.is_loaded = False
             self.load_error = f"Failed to load model artifact: {e}"
-            logger.error("Error loading model artifact: %s", e)
+            metrics_manager.record_model_load(success=False)
+            log_event(
+                logger,
+                logging.ERROR,
+                event="model_loading_failed",
+                message="Error loading model artifact",
+                error=str(e),
+            )
             return False
 
     @property
@@ -123,10 +153,19 @@ class InferenceService:
             ModelNotLoadedError: If model is not loaded.
             RuntimeError: If unexpected error occurs during prediction.
         """
+        cid = correlation_id or str(uuid4())
+
         if not self.is_loaded or self.pipeline is None:
+            metrics_manager.record_prediction_failure(reason="model_unloaded")
+            log_event(
+                logger,
+                logging.ERROR,
+                event="prediction_failed",
+                message="Prediction requested on unloaded model",
+                correlation_id=cid,
+            )
             raise ModelNotLoadedError("Model artifact is not loaded or unavailable.")
 
-        cid = correlation_id or str(uuid4())
         record_dict = record.model_dump()
 
         try:
@@ -136,13 +175,39 @@ class InferenceService:
             predicted_class = int(churn_probability >= self.decision_threshold)
             timestamp = datetime.now(timezone.utc).isoformat()
 
+            version_str = self.model_version
+            metrics_manager.record_prediction(
+                predicted_class=predicted_class, model_version=version_str
+            )
+
+            # Structured, privacy-safe log event (no customerID logged)
+            log_event(
+                logger,
+                logging.INFO,
+                event="prediction_request",
+                message="Single customer prediction served successfully",
+                correlation_id=cid,
+                model_version=version_str,
+                predicted_class=predicted_class,
+                churn_probability=round(churn_probability, 4),
+            )
+
             return PredictionResponse(
                 churn_probability=round(churn_probability, 4),
                 predicted_class=predicted_class,
-                model_version=self.model_version,
+                model_version=version_str,
                 correlation_id=cid,
                 prediction_timestamp=timestamp,
             )
         except Exception as e:
-            logger.error("Unexpected error during single-customer inference: %s", e)
+            metrics_manager.record_prediction_failure(reason="execution_error")
+            log_event(
+                logger,
+                logging.ERROR,
+                event="prediction_failed",
+                message="Unexpected error during single-customer inference",
+                correlation_id=cid,
+                model_version=self.model_version,
+                error=str(e),
+            )
             raise RuntimeError("Inference execution failed safely.") from e

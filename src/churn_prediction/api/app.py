@@ -1,11 +1,12 @@
-"""FastAPI application factory and API endpoint handlers."""
+"""FastAPI application factory, middleware, and API endpoint handlers."""
 
 import logging
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import FastAPI, Header, Request, status
+from fastapi import FastAPI, Header, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
@@ -17,6 +18,11 @@ from churn_prediction.api.schemas import (
     ReadinessResponse,
 )
 from churn_prediction.api.service import InferenceService, ModelNotLoadedError
+from churn_prediction.monitoring import (
+    log_event,
+    metrics_manager,
+    setup_structured_logging,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +40,7 @@ def create_app(
     Returns:
         Configured FastAPI application instance.
     """
+    setup_structured_logging(level="INFO")
     config = load_serving_config(config_path)
     api_config = config.get("api", {})
     model_config = config.get("model", {})
@@ -58,10 +65,20 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app_instance: FastAPI):
         """Lifespan context manager to load model artifact on server startup."""
-        logger.info("Initializing API application and loading model artifact...")
+        log_event(
+            logger,
+            logging.INFO,
+            event="api_startup",
+            message="Initializing API application and loading model artifact",
+        )
         service.load_model()
         yield
-        logger.info("Shutting down API application...")
+        log_event(
+            logger,
+            logging.INFO,
+            event="api_shutdown",
+            message="Shutting down API application",
+        )
 
     app = FastAPI(
         title=title,
@@ -72,6 +89,20 @@ def create_app(
     # Attach service to app state for testing and middleware access
     app.state.service = service
 
+    # Request metrics middleware
+    @app.middleware("http")
+    async def measure_request_metrics(request: Request, call_next):
+        start_time = time.perf_counter()
+        response = await call_next(request)
+        duration = time.perf_counter() - start_time
+        metrics_manager.record_api_request(
+            endpoint=request.url.path,
+            method=request.method,
+            status_code=response.status_code,
+            duration_seconds=duration,
+        )
+        return response
+
     # Exception Handlers
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(
@@ -79,8 +110,14 @@ def create_app(
     ) -> JSONResponse:
         """Handle request schema validation errors with clean 422 response."""
         cid = request.headers.get("X-Correlation-ID")
-        logger.warning(
-            "Request validation failed for path %s: %s", request.url.path, exc
+        metrics_manager.record_prediction_failure(reason="validation_error")
+        log_event(
+            logger,
+            logging.WARNING,
+            event="request_validation_failed",
+            message=f"Request validation failed for path {request.url.path}",
+            correlation_id=cid,
+            error=str(exc),
         )
         return JSONResponse(
             status_code=422,
@@ -98,7 +135,15 @@ def create_app(
     ) -> JSONResponse:
         """Handle prediction attempts on unavailable model with safe 503 response."""
         cid = request.headers.get("X-Correlation-ID")
-        logger.error("Model unavailable during prediction request: %s", exc)
+        metrics_manager.record_prediction_failure(reason="model_unloaded")
+        log_event(
+            logger,
+            logging.ERROR,
+            event="model_unavailable",
+            message="Model unavailable during prediction request",
+            correlation_id=cid,
+            error=str(exc),
+        )
         return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             content={
@@ -114,7 +159,15 @@ def create_app(
     ) -> JSONResponse:
         """Handle unhandled server exceptions safely without leaking stack traces."""
         cid = request.headers.get("X-Correlation-ID")
-        logger.error("Unhandled internal server error: %s", exc, exc_info=False)
+        metrics_manager.record_prediction_failure(reason="unhandled_exception")
+        log_event(
+            logger,
+            logging.ERROR,
+            event="major_failure",
+            message="Unhandled internal server error",
+            correlation_id=cid,
+            error=str(exc),
+        )
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
@@ -130,6 +183,14 @@ def create_app(
         """Health check endpoint returning overall service and model status."""
         is_loaded = service.is_loaded
         service_status = "ok" if is_loaded else "degraded"
+        log_event(
+            logger,
+            logging.INFO,
+            event="health_check",
+            message="Health check probe served",
+            status=service_status,
+            model_loaded=is_loaded,
+        )
         return HealthResponse(
             status=service_status,
             model_loaded=is_loaded,
@@ -152,6 +213,15 @@ def create_app(
             },
         )
 
+    @app.get("/metrics", tags=["Observability"])
+    async def get_metrics() -> Response:
+        """Expose Prometheus metrics endpoint."""
+        metrics_data = metrics_manager.generate_metrics_text()
+        return Response(
+            content=metrics_data,
+            media_type="text/plain; version=0.0.4; charset=utf-8",
+        )
+
     @app.post(
         "/predict",
         response_model=PredictionResponse,
@@ -170,7 +240,15 @@ def create_app(
         except ModelNotLoadedError as e:
             raise e
         except Exception as e:
-            logger.error("Prediction endpoint execution failed: %s", e)
+            metrics_manager.record_prediction_failure(reason="prediction_error")
+            log_event(
+                logger,
+                logging.ERROR,
+                event="major_failure",
+                message="Prediction endpoint execution failed",
+                correlation_id=cid,
+                error=str(e),
+            )
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={
