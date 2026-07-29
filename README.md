@@ -4,7 +4,7 @@ A production-oriented machine learning system for identifying IBM Telco customer
 
 ## Project status
 
-**In development — Milestone 4 (Baseline Pipeline) is complete and the evaluation contract is next.** This repository is being built as a portfolio project: it will demonstrate a reproducible, tested churn-risk workflow without claiming production performance or causal business impact. See [TASKS.md](TASKS.md) for independently testable milestones and [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) for the architecture and assumptions.
+**In development — Milestone 5 (Evaluation Contract) is complete and batch scoring is next.** This repository is being built as a portfolio project: it will demonstrate a reproducible, tested churn-risk workflow without claiming production performance or causal business impact. See [TASKS.md](TASKS.md) for independently testable milestones and [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) for the architecture and assumptions.
 
 ## Local development
 
@@ -17,6 +17,7 @@ uv run ruff check .
 uv run pytest
 uv run python scripts/run_eda.py         # Run reproducible EDA pipeline and export plots
 uv run python scripts/train_baseline.py # Train baseline model and save pipeline artifacts
+uv run python scripts/evaluate_baseline.py # Evaluate baseline model and generate metrics/plots
 uv run python scripts/predict_baseline.py # Load trained pipeline and validate inference
 ```
 
