@@ -65,6 +65,8 @@ flowchart TD
 ├── configs/                    # Versioned YAML configurations
 │   ├── data_contract.yaml
 │   ├── evaluation.yaml
+│   ├── observability.yaml
+│   ├── post_deployment.yaml
 │   ├── serving.yaml
 │   └── training.yaml
 ├── models/                     # Persisted model artifacts (ignored by Git)
@@ -72,6 +74,7 @@ flowchart TD
 │   └── baseline_pipeline.joblib
 ├── reports/                    # Generated metrics, plots & quarantine outputs
 │   ├── evaluation/
+│   ├── post_deployment/
 │   ├── quarantine/
 │   └── scoring/
 ├── scripts/                    # Thin operator entry points
@@ -80,14 +83,17 @@ flowchart TD
 │   ├── evaluate_baseline.py
 │   ├── validate_scoring_input.py
 │   ├── run_batch_scoring.py
-│   └── run_api.py
+│   ├── run_api.py
+│   └── run_post_deployment_evaluation.py
 ├── src/churn_prediction/       # Main Python application package
 │   ├── api/                    # FastAPI app, schemas, config & service
 │   ├── data/                   # Contract schema & Pandera validation
 │   ├── eda/                    # Analysis & plotting pipeline
 │   ├── evaluation/             # Metrics, calibration & capacity evaluation
 │   ├── features/               # scikit-learn preprocessing pipeline
-│   └── models/                 # Model trainer, serialization & batch engine
+│   ├── models/                 # Model trainer, serialization & batch engine
+│   ├── monitoring/             # Structured logging, metrics & drift detection
+│   └── post_deployment/        # Delayed labels, campaign evaluation & retraining logic
 ├── tests/                      # Comprehensive test suite
 │   ├── contract/               # Input contract & API schema tests
 │   ├── integration/            # Pipeline & container integration tests
@@ -118,7 +124,7 @@ uv sync --locked
 
 ### 2. Pipeline Execution Commands
 
-Run the complete pipeline from data validation to local API serving:
+Run the complete pipeline from data validation to post-deployment evaluation:
 
 ```bash
 # 1. Validate raw data against data contract
@@ -138,6 +144,9 @@ uv run python scripts/run_batch_scoring.py
 
 # 6. Launch local FastAPI inference service
 uv run python scripts/run_api.py --host 127.0.0.1 --port 8000
+
+# 7. Run post-deployment learning & delayed-label evaluation workflow
+uv run python scripts/run_post_deployment_evaluation.py
 ```
 
 ---
