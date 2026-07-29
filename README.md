@@ -141,6 +141,43 @@ uv run python scripts/run_api.py --host 127.0.0.1 --port 8000
 
 ---
 
+## 📈 MLflow Experiment Tracking & Model Registry
+
+The system integrates [MLflow](https://mlflow.org/) for experiment tracking, run lineage, data manifest logging, Git revision tracking, artifact storage, model signatures, and local model registry workflows.
+
+### 1. Storage & Configuration
+- **Experiment Store**: Recorded locally under `./mlruns/` (ignored by Git).
+- **Tracking URI**: Defaults to `file:./mlruns`, configurable via `configs/training.yaml` or `MLFLOW_TRACKING_URI` environment variable.
+- **Experiment Name**: Defaults to `telco_customer_churn` (`MLFLOW_EXPERIMENT_NAME`).
+- **Registered Model Name**: Defaults to `telco_churn_model` (`MLFLOW_REGISTERED_MODEL_NAME`).
+
+### 2. Running Tracked Experiments
+Training automatically logs runs and registers candidate models to MLflow:
+
+```bash
+# Execute training pipeline (logs lineage, data checksum, git revision, model signature, and artifacts)
+uv run python scripts/train_baseline.py
+
+# Optionally disable MLflow tracking during training if desired
+uv run python scripts/train_baseline.py --no-mlflow
+```
+
+### 3. Inspecting Experiments & Models via MLflow UI
+To start the local MLflow tracking server and UI:
+
+```bash
+uv run mlflow ui --port 5000
+```
+
+Open `http://127.0.0.1:5000` in your web browser to:
+- **Inspect Runs & Lineage**: View parameters, random seed, training metrics (`train_accuracy`, `val_accuracy`, `test_accuracy`), split counts, dataset SHA-256 checksum (`data_checksum`), and Git SHA (`git_commit`).
+- **Inspect Model Signatures**: View inferred input feature schema and output predictions for the logged scikit-learn pipeline.
+- **Inspect Artifacts**: Download or review saved `.joblib` pipelines, `metadata.json`, and evaluation reports/plots.
+- **Manage Local Registry**: View registered model versions under the **Models** tab (`telco_churn_model`) and load versioned models for scoring.
+
+---
+
+
 ## 🐳 Docker Container Workflow
 
 The service is packaged into a production-ready, multi-stage Docker container built on `python:3.11-slim` running as a non-root user (`appuser` UID 10001).

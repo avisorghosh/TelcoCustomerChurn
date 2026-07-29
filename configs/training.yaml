@@ -53,3 +53,11 @@ artifacts:
   output_dir: "models"
   pipeline_filename: "baseline_pipeline.joblib"
   metadata_filename: "baseline_metadata.json"
+
+mlflow:
+  enabled: true
+  tracking_uri: "file:./mlruns"
+  experiment_name: "telco_customer_churn"
+  registered_model_name: "telco_churn_model"
+  artifact_location: null
+

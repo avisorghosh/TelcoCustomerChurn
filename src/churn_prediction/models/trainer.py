@@ -16,6 +16,7 @@ from churn_prediction.features.pipeline import (
     load_training_config,
 )
 from churn_prediction.models.serialization import save_artifacts
+from churn_prediction.tracking.tracker import log_experiment_run
 
 
 def load_and_validate_dataset(
@@ -127,12 +128,15 @@ def prepare_features_and_target(
 def train_baseline(
     config_path: str | Path | None = None,
     data_path_override: str | Path | None = None,
+    log_to_mlflow: bool = True,
 ) -> tuple[Pipeline, dict[str, Any], dict[str, Path]]:
     """Execute complete baseline training workflow and serialize artifacts.
 
     Args:
         config_path: Optional path to training YAML config.
         data_path_override: Optional path to dataset override.
+        log_to_mlflow: Whether to log experiment metadata, artifacts,
+            and model to MLflow.
 
     Returns:
         Tuple of (fitted_pipeline, metadata_dict, artifact_paths_dict).
@@ -223,6 +227,17 @@ def train_baseline(
         "pipeline_path": pipeline_path,
         "metadata_path": metadata_path,
     }
+
+    # 9. Log to MLflow if enabled
+    if log_to_mlflow and config.get("mlflow", {}).get("enabled", True):
+        log_experiment_run(
+            pipeline=pipeline,
+            metadata=metadata,
+            config=config,
+            data_path=data_path,
+            sample_df=X_train.head(5),
+            artifact_paths=artifact_paths,
+        )
 
     return pipeline, metadata, artifact_paths
 
