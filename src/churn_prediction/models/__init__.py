@@ -11,6 +11,10 @@ from churn_prediction.models.batch_scoring import (
     score_batch,
     validate_scoring_batch,
 )
+from churn_prediction.models.restore import (
+    restore_model_from_dir,
+    restore_model_from_registry,
+)
 from churn_prediction.models.serialization import (
     load_artifacts,
     load_metadata,
@@ -39,6 +43,8 @@ __all__ = [
     "load_pipeline",
     "load_metadata",
     "load_artifacts",
+    "restore_model_from_registry",
+    "restore_model_from_dir",
     "BatchScoringError",
     "BatchValidationError",
     "ModelLoadError",

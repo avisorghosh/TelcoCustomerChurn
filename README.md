@@ -54,8 +54,9 @@ flowchart TD
 
 ```text
 .
-├── Dockerfile                  # Multi-stage production container setup
-├── .dockerignore               # Docker build context exclusions
+├── DEPLOYMENT.md                # Deployment requirements & environment config
+├── RELEASE.md                   # Step-by-step release procedure & rehearsal log
+├── ROLLBACK.md                  # Model rollback & restoration operational guide
 ├── AGENTS.md                   # Repository engineering rules & guidelines
 ├── SYSTEM_DESIGN.md            # Detailed system design specification
 ├── TASKS.md                    # Milestone-based delivery tracking
@@ -174,6 +175,19 @@ Open `http://127.0.0.1:5000` in your web browser to:
 - **Inspect Model Signatures**: View inferred input feature schema and output predictions for the logged scikit-learn pipeline.
 - **Inspect Artifacts**: Download or review saved `.joblib` pipelines, `metadata.json`, and evaluation reports/plots.
 - **Manage Local Registry**: View registered model versions under the **Models** tab (`telco_churn_model`) and load versioned models for scoring.
+
+### 4. Model Restoration & Rollback
+To restore a previously registered model version from MLflow without retraining:
+
+```bash
+# Restore registered model version 1 into active models/ directory
+uv run python scripts/restore_model.py --version 1
+
+# Or restore from a local backup directory
+uv run python scripts/restore_model.py --source-dir models/backup_v1
+```
+
+For complete release procedures and rollback guidelines, see [RELEASE.md](RELEASE.md) and [ROLLBACK.md](ROLLBACK.md).
 
 ---
 

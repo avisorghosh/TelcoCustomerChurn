@@ -16,7 +16,7 @@ Each milestone has a narrow acceptance test. Do not begin a later milestone unti
 | 9. Experiment tracking [Completed] | Integrate MLflow tracking, data manifest, config, Git revision, artifact logging, model signature, and local registry workflow. | A run is visible with complete lineage; registered artifact can be loaded and scored. |
 | 10. Candidate comparison [Completed] | Compare baseline with a bounded boosted-tree candidate; conduct calibration and segment/fairness evaluation. | Decision record names the selected model using predeclared gates; no test-set-driven tuning. |
 | 11. Observability [Completed] | Add structured logs, Prometheus metrics, batch quality/drift reports, dashboard/runbook templates, and alert policy. | Synthetic bad input/drift triggers expected metrics/report; logs contain no raw customer payload. |
-| 12. Release rehearsal | Write API deployment notes, rollback procedure, and execute an end-to-end dry run. | New environment validates, trains, batch-scores, serves, and restores the prior model artifact using only documented steps. |
+| 12. Release rehearsal [Completed] | Write API deployment notes, rollback procedure, and execute an end-to-end dry run. | New environment validates, trains, batch-scores, serves, and restores the prior model artifact using only documented steps. |
 | 13. Post-deployment learning | Integrate delayed labels and campaign treatment/control outcomes; evaluate live quality and value. | Scheduled report compares incumbent performance/business outcomes; retraining decision is documented. |
 
 ## First-release defaults
