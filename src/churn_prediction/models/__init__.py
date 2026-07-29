@@ -23,6 +23,8 @@ from churn_prediction.models.trainer import (
     prepare_features_and_target,
     split_dataset,
     train_baseline,
+    train_candidate,
+    train_model,
 )
 
 __all__ = [
@@ -30,6 +32,8 @@ __all__ = [
     "split_dataset",
     "prepare_features_and_target",
     "train_baseline",
+    "train_candidate",
+    "train_model",
     "predict_churn",
     "save_artifacts",
     "load_pipeline",

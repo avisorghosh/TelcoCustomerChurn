@@ -73,6 +73,7 @@ def compute_binary_classification_metrics(
         labels=[0, 1],
         target_names=["No Churn", "Churn"],
         output_dict=True,
+        zero_division=0,
     )
 
     return {

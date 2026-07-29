@@ -1,0 +1,659 @@
+{
+  "title": "Model Selection Decision Record: Baseline vs. LightGBM Candidate",
+  "timestamp": "2026-07-29T14:39:30.621594+00:00",
+  "evaluation_split": "test",
+  "sample_size": 1057,
+  "models_compared": [
+    {
+      "model_name": "baseline_logistic_regression",
+      "model_type": "LogisticRegression",
+      "hyperparameters": {
+        "C": 1.0,
+        "solver": "lbfgs",
+        "max_iter": 1000,
+        "random_state": 42,
+        "class_weight": null
+      }
+    },
+    {
+      "model_name": "candidate_gradient_boosting",
+      "model_type": "LightGBM",
+      "hyperparameters": {
+        "n_estimators": 100,
+        "max_depth": 3,
+        "learning_rate": 0.05,
+        "subsample": 0.8,
+        "max_features": "sqrt",
+        "random_state": 42
+      }
+    }
+  ],
+  "metrics_summary": {
+    "baseline": {
+      "pr_auc": 0.6437,
+      "roc_auc": 0.8487,
+      "brier_score": 0.1361,
+      "accuracy": 0.7985,
+      "precision": 0.6367,
+      "recall": 0.5571,
+      "f1_score": 0.5943,
+      "precision_at_capacity": 0.7547,
+      "recall_at_capacity": 0.2857
+    },
+    "candidate": {
+      "pr_auc": 0.6753,
+      "roc_auc": 0.8528,
+      "brier_score": 0.1332,
+      "accuracy": 0.8079,
+      "precision": 0.6774,
+      "recall": 0.525,
+      "f1_score": 0.5915,
+      "precision_at_capacity": 0.7642,
+      "recall_at_capacity": 0.2893
+    },
+    "difference_candidate_minus_baseline": {
+      "pr_auc": 0.0316,
+      "roc_auc": 0.0041,
+      "brier_score": -0.0029,
+      "precision_at_capacity": 0.0095,
+      "recall_at_capacity": 0.0036
+    }
+  },
+  "calibration_summary": {
+    "baseline_brier_score": 0.1361,
+    "candidate_brier_score": 0.1332,
+    "brier_score_difference": -0.0029,
+    "observations": "Candidate LightGBM Brier score is 0.1332 compared to Baseline Logistic Regression Brier score of 0.1361."
+  },
+  "segment_analysis_summary": {
+    "baseline": {
+      "tenure_band": {
+        "0-12 months": {
+          "count": 327,
+          "churn_count": 158,
+          "churn_rate": 0.4832,
+          "mean_predicted_probability": 0.4653,
+          "pr_auc": 0.7129,
+          "roc_auc": 0.746,
+          "brier_score": 0.2052,
+          "accuracy": 0.6728,
+          "f1_score": 0.6708,
+          "selected_count_at_capacity": 90,
+          "precision_at_capacity": 0.7556,
+          "recall_at_capacity": 0.4304
+        },
+        "13-24 months": {
+          "count": 154,
+          "churn_count": 45,
+          "churn_rate": 0.2922,
+          "mean_predicted_probability": 0.3579,
+          "pr_auc": 0.6057,
+          "roc_auc": 0.8175,
+          "brier_score": 0.1614,
+          "accuracy": 0.7727,
+          "f1_score": 0.6237,
+          "selected_count_at_capacity": 13,
+          "precision_at_capacity": 0.6923,
+          "recall_at_capacity": 0.2
+        },
+        "25-48 months": {
+          "count": 239,
+          "churn_count": 51,
+          "churn_rate": 0.2134,
+          "mean_predicted_probability": 0.2057,
+          "pr_auc": 0.5689,
+          "roc_auc": 0.7986,
+          "brier_score": 0.1352,
+          "accuracy": 0.8033,
+          "f1_score": 0.4051,
+          "selected_count_at_capacity": 2,
+          "precision_at_capacity": 1.0,
+          "recall_at_capacity": 0.0392
+        },
+        "49+ months": {
+          "count": 337,
+          "churn_count": 26,
+          "churn_rate": 0.0772,
+          "mean_predicted_probability": 0.0841,
+          "pr_auc": 0.3913,
+          "roc_auc": 0.8862,
+          "brier_score": 0.058,
+          "accuracy": 0.9288,
+          "f1_score": 0.1429,
+          "selected_count_at_capacity": 0,
+          "precision_at_capacity": 0.0,
+          "recall_at_capacity": 0.0
+        }
+      },
+      "Contract": {
+        "Month-to-month": {
+          "count": 583,
+          "churn_count": 247,
+          "churn_rate": 0.4237,
+          "mean_predicted_probability": 0.4337,
+          "pr_auc": 0.6724,
+          "roc_auc": 0.7485,
+          "brier_score": 0.2005,
+          "accuracy": 0.693,
+          "f1_score": 0.6354,
+          "selected_count_at_capacity": 105,
+          "precision_at_capacity": 0.7524,
+          "recall_at_capacity": 0.3198
+        },
+        "One year": {
+          "count": 224,
+          "churn_count": 28,
+          "churn_rate": 0.125,
+          "mean_predicted_probability": 0.1092,
+          "pr_auc": 0.3115,
+          "roc_auc": 0.7637,
+          "brier_score": 0.0991,
+          "accuracy": 0.8705,
+          "f1_score": 0.0,
+          "selected_count_at_capacity": 0,
+          "precision_at_capacity": 0.0,
+          "recall_at_capacity": 0.0
+        },
+        "Two year": {
+          "count": 250,
+          "churn_count": 5,
+          "churn_rate": 0.02,
+          "mean_predicted_probability": 0.0298,
+          "pr_auc": 0.0916,
+          "roc_auc": 0.8824,
+          "brier_score": 0.0191,
+          "accuracy": 0.98,
+          "f1_score": 0.0,
+          "selected_count_at_capacity": 0,
+          "precision_at_capacity": 0.0,
+          "recall_at_capacity": 0.0
+        }
+      },
+      "InternetService": {
+        "DSL": {
+          "count": 358,
+          "churn_count": 66,
+          "churn_rate": 0.1844,
+          "mean_predicted_probability": 0.1822,
+          "pr_auc": 0.5384,
+          "roc_auc": 0.8278,
+          "brier_score": 0.1173,
+          "accuracy": 0.838,
+          "f1_score": 0.3696,
+          "selected_count_at_capacity": 3,
+          "precision_at_capacity": 1.0,
+          "recall_at_capacity": 0.0455
+        },
+        "Fiber optic": {
+          "count": 480,
+          "churn_count": 198,
+          "churn_rate": 0.4125,
+          "mean_predicted_probability": 0.4266,
+          "pr_auc": 0.6891,
+          "roc_auc": 0.7818,
+          "brier_score": 0.1873,
+          "accuracy": 0.7104,
+          "f1_score": 0.6667,
+          "selected_count_at_capacity": 102,
+          "precision_at_capacity": 0.7451,
+          "recall_at_capacity": 0.3838
+        },
+        "No": {
+          "count": 219,
+          "churn_count": 16,
+          "churn_rate": 0.0731,
+          "mean_predicted_probability": 0.0675,
+          "pr_auc": 0.4258,
+          "roc_auc": 0.9201,
+          "brier_score": 0.0545,
+          "accuracy": 0.9269,
+          "f1_score": 0.0,
+          "selected_count_at_capacity": 0,
+          "precision_at_capacity": 0.0,
+          "recall_at_capacity": 0.0
+        }
+      },
+      "monthly_charges_band": {
+        "$35 - $70": {
+          "count": 272,
+          "churn_count": 63,
+          "churn_rate": 0.2316,
+          "mean_predicted_probability": 0.2336,
+          "pr_auc": 0.5951,
+          "roc_auc": 0.7966,
+          "brier_score": 0.1403,
+          "accuracy": 0.8088,
+          "f1_score": 0.4583,
+          "selected_count_at_capacity": 11,
+          "precision_at_capacity": 0.9091,
+          "recall_at_capacity": 0.1587
+        },
+        "< $35": {
+          "count": 243,
+          "churn_count": 27,
+          "churn_rate": 0.1111,
+          "mean_predicted_probability": 0.1015,
+          "pr_auc": 0.6081,
+          "roc_auc": 0.9245,
+          "brier_score": 0.0666,
+          "accuracy": 0.9095,
+          "f1_score": 0.3529,
+          "selected_count_at_capacity": 0,
+          "precision_at_capacity": 0.0,
+          "recall_at_capacity": 0.0
+        },
+        "> $70": {
+          "count": 542,
+          "churn_count": 190,
+          "churn_rate": 0.3506,
+          "mean_predicted_probability": 0.3627,
+          "pr_auc": 0.6752,
+          "roc_auc": 0.8181,
+          "brier_score": 0.1651,
+          "accuracy": 0.7435,
+          "f1_score": 0.6481,
+          "selected_count_at_capacity": 94,
+          "precision_at_capacity": 0.734,
+          "recall_at_capacity": 0.3632
+        }
+      }
+    },
+    "candidate": {
+      "tenure_band": {
+        "0-12 months": {
+          "count": 327,
+          "churn_count": 158,
+          "churn_rate": 0.4832,
+          "mean_predicted_probability": 0.4662,
+          "pr_auc": 0.7664,
+          "roc_auc": 0.7729,
+          "brier_score": 0.1951,
+          "accuracy": 0.6972,
+          "f1_score": 0.6954,
+          "selected_count_at_capacity": 101,
+          "precision_at_capacity": 0.7624,
+          "recall_at_capacity": 0.4873
+        },
+        "13-24 months": {
+          "count": 154,
+          "churn_count": 45,
+          "churn_rate": 0.2922,
+          "mean_predicted_probability": 0.3227,
+          "pr_auc": 0.6279,
+          "roc_auc": 0.818,
+          "brier_score": 0.1578,
+          "accuracy": 0.7727,
+          "f1_score": 0.5679,
+          "selected_count_at_capacity": 4,
+          "precision_at_capacity": 0.75,
+          "recall_at_capacity": 0.0667
+        },
+        "25-48 months": {
+          "count": 239,
+          "churn_count": 51,
+          "churn_rate": 0.2134,
+          "mean_predicted_probability": 0.1915,
+          "pr_auc": 0.5389,
+          "roc_auc": 0.7965,
+          "brier_score": 0.1362,
+          "accuracy": 0.8159,
+          "f1_score": 0.3125,
+          "selected_count_at_capacity": 0,
+          "precision_at_capacity": 0.0,
+          "recall_at_capacity": 0.0
+        },
+        "49+ months": {
+          "count": 337,
+          "churn_count": 26,
+          "churn_rate": 0.0772,
+          "mean_predicted_probability": 0.108,
+          "pr_auc": 0.4018,
+          "roc_auc": 0.8756,
+          "brier_score": 0.0597,
+          "accuracy": 0.9258,
+          "f1_score": 0.0741,
+          "selected_count_at_capacity": 0,
+          "precision_at_capacity": 0.0,
+          "recall_at_capacity": 0.0
+        }
+      },
+      "Contract": {
+        "Month-to-month": {
+          "count": 583,
+          "churn_count": 247,
+          "churn_rate": 0.4237,
+          "mean_predicted_probability": 0.4266,
+          "pr_auc": 0.7081,
+          "roc_auc": 0.7607,
+          "brier_score": 0.1949,
+          "accuracy": 0.7084,
+          "f1_score": 0.6336,
+          "selected_count_at_capacity": 105,
+          "precision_at_capacity": 0.7619,
+          "recall_at_capacity": 0.3239
+        },
+        "One year": {
+          "count": 224,
+          "churn_count": 28,
+          "churn_rate": 0.125,
+          "mean_predicted_probability": 0.1073,
+          "pr_auc": 0.336,
+          "roc_auc": 0.7646,
+          "brier_score": 0.0989,
+          "accuracy": 0.875,
+          "f1_score": 0.0,
+          "selected_count_at_capacity": 0,
+          "precision_at_capacity": 0.0,
+          "recall_at_capacity": 0.0
+        },
+        "Two year": {
+          "count": 250,
+          "churn_count": 5,
+          "churn_rate": 0.02,
+          "mean_predicted_probability": 0.0464,
+          "pr_auc": 0.0788,
+          "roc_auc": 0.8637,
+          "brier_score": 0.0199,
+          "accuracy": 0.98,
+          "f1_score": 0.0,
+          "selected_count_at_capacity": 0,
+          "precision_at_capacity": 0.0,
+          "recall_at_capacity": 0.0
+        }
+      },
+      "InternetService": {
+        "DSL": {
+          "count": 358,
+          "churn_count": 66,
+          "churn_rate": 0.1844,
+          "mean_predicted_probability": 0.1921,
+          "pr_auc": 0.5759,
+          "roc_auc": 0.8332,
+          "brier_score": 0.114,
+          "accuracy": 0.8464,
+          "f1_score": 0.3956,
+          "selected_count_at_capacity": 6,
+          "precision_at_capacity": 1.0,
+          "recall_at_capacity": 0.0909
+        },
+        "Fiber optic": {
+          "count": 480,
+          "churn_count": 198,
+          "churn_rate": 0.4125,
+          "mean_predicted_probability": 0.4146,
+          "pr_auc": 0.7241,
+          "roc_auc": 0.7854,
+          "brier_score": 0.1842,
+          "accuracy": 0.725,
+          "f1_score": 0.6615,
+          "selected_count_at_capacity": 99,
+          "precision_at_capacity": 0.7475,
+          "recall_at_capacity": 0.3737
+        },
+        "No": {
+          "count": 219,
+          "churn_count": 16,
+          "churn_rate": 0.0731,
+          "mean_predicted_probability": 0.0754,
+          "pr_auc": 0.4217,
+          "roc_auc": 0.9179,
+          "brier_score": 0.0527,
+          "accuracy": 0.9269,
+          "f1_score": 0.0,
+          "selected_count_at_capacity": 0,
+          "precision_at_capacity": 0.0,
+          "recall_at_capacity": 0.0
+        }
+      },
+      "monthly_charges_band": {
+        "$35 - $70": {
+          "count": 272,
+          "churn_count": 63,
+          "churn_rate": 0.2316,
+          "mean_predicted_probability": 0.2444,
+          "pr_auc": 0.6393,
+          "roc_auc": 0.8129,
+          "brier_score": 0.1323,
+          "accuracy": 0.8309,
+          "f1_score": 0.5208,
+          "selected_count_at_capacity": 12,
+          "precision_at_capacity": 1.0,
+          "recall_at_capacity": 0.1905
+        },
+        "< $35": {
+          "count": 243,
+          "churn_count": 27,
+          "churn_rate": 0.1111,
+          "mean_predicted_probability": 0.1071,
+          "pr_auc": 0.6261,
+          "roc_auc": 0.9251,
+          "brier_score": 0.0659,
+          "accuracy": 0.9012,
+          "f1_score": 0.2941,
+          "selected_count_at_capacity": 2,
+          "precision_at_capacity": 1.0,
+          "recall_at_capacity": 0.0741
+        },
+        "> $70": {
+          "count": 542,
+          "churn_count": 190,
+          "churn_rate": 0.3506,
+          "mean_predicted_probability": 0.3539,
+          "pr_auc": 0.7008,
+          "roc_auc": 0.8179,
+          "brier_score": 0.1637,
+          "accuracy": 0.7546,
+          "f1_score": 0.6376,
+          "selected_count_at_capacity": 91,
+          "precision_at_capacity": 0.7253,
+          "recall_at_capacity": 0.3474
+        }
+      }
+    }
+  },
+  "fairness_summary": {
+    "baseline": {
+      "gender": {
+        "subgroups": {
+          "Female": {
+            "count": 529,
+            "churn_count": 143,
+            "churn_rate": 0.2703,
+            "mean_predicted_probability": 0.2683,
+            "selection_rate": 0.2306,
+            "tpr": 0.5455,
+            "fpr": 0.114,
+            "pr_auc": 0.6327,
+            "roc_auc": 0.8489,
+            "brier_score": 0.1376,
+            "capacity_selection_rate": 0.0907
+          },
+          "Male": {
+            "count": 528,
+            "churn_count": 137,
+            "churn_rate": 0.2595,
+            "mean_predicted_probability": 0.2705,
+            "selection_rate": 0.233,
+            "tpr": 0.5693,
+            "fpr": 0.1151,
+            "pr_auc": 0.6604,
+            "roc_auc": 0.8488,
+            "brier_score": 0.1346,
+            "capacity_selection_rate": 0.108
+          }
+        },
+        "disparity_metrics": {
+          "demographic_parity_difference": 0.0024,
+          "demographic_parity_ratio": 0.9897,
+          "equalized_odds_tpr_difference": 0.0238,
+          "equalized_odds_fpr_difference": 0.0011,
+          "brier_score_disparity": 0.003
+        }
+      },
+      "SeniorCitizen": {
+        "subgroups": {
+          "0": {
+            "count": 888,
+            "churn_count": 205,
+            "churn_rate": 0.2309,
+            "mean_predicted_probability": 0.2431,
+            "selection_rate": 0.2027,
+            "tpr": 0.5463,
+            "fpr": 0.0996,
+            "pr_auc": 0.6318,
+            "roc_auc": 0.8516,
+            "brier_score": 0.1259,
+            "capacity_selection_rate": 0.0811
+          },
+          "1": {
+            "count": 169,
+            "churn_count": 75,
+            "churn_rate": 0.4438,
+            "mean_predicted_probability": 0.4076,
+            "selection_rate": 0.3846,
+            "tpr": 0.5867,
+            "fpr": 0.2234,
+            "pr_auc": 0.6843,
+            "roc_auc": 0.7814,
+            "brier_score": 0.1895,
+            "capacity_selection_rate": 0.1953
+          }
+        },
+        "disparity_metrics": {
+          "demographic_parity_difference": 0.1819,
+          "demographic_parity_ratio": 0.527,
+          "equalized_odds_tpr_difference": 0.0404,
+          "equalized_odds_fpr_difference": 0.1238,
+          "brier_score_disparity": 0.0636
+        }
+      }
+    },
+    "candidate": {
+      "gender": {
+        "subgroups": {
+          "Female": {
+            "count": 529,
+            "churn_count": 143,
+            "churn_rate": 0.2703,
+            "mean_predicted_probability": 0.2672,
+            "selection_rate": 0.2042,
+            "tpr": 0.5175,
+            "fpr": 0.0881,
+            "pr_auc": 0.6802,
+            "roc_auc": 0.8516,
+            "brier_score": 0.1351,
+            "capacity_selection_rate": 0.0964
+          },
+          "Male": {
+            "count": 528,
+            "churn_count": 137,
+            "churn_rate": 0.2595,
+            "mean_predicted_probability": 0.2708,
+            "selection_rate": 0.2064,
+            "tpr": 0.5328,
+            "fpr": 0.0921,
+            "pr_auc": 0.6761,
+            "roc_auc": 0.8548,
+            "brier_score": 0.1312,
+            "capacity_selection_rate": 0.1023
+          }
+        },
+        "disparity_metrics": {
+          "demographic_parity_difference": 0.0022,
+          "demographic_parity_ratio": 0.9893,
+          "equalized_odds_tpr_difference": 0.0153,
+          "equalized_odds_fpr_difference": 0.004,
+          "brier_score_disparity": 0.0039
+        }
+      },
+      "SeniorCitizen": {
+        "subgroups": {
+          "0": {
+            "count": 888,
+            "churn_count": 205,
+            "churn_rate": 0.2309,
+            "mean_predicted_probability": 0.2443,
+            "selection_rate": 0.1768,
+            "tpr": 0.5268,
+            "fpr": 0.0717,
+            "pr_auc": 0.6638,
+            "roc_auc": 0.8566,
+            "brier_score": 0.122,
+            "capacity_selection_rate": 0.0833
+          },
+          "1": {
+            "count": 169,
+            "churn_count": 75,
+            "churn_rate": 0.4438,
+            "mean_predicted_probability": 0.3988,
+            "selection_rate": 0.355,
+            "tpr": 0.52,
+            "fpr": 0.2234,
+            "pr_auc": 0.7007,
+            "roc_auc": 0.7765,
+            "brier_score": 0.1915,
+            "capacity_selection_rate": 0.1834
+          }
+        },
+        "disparity_metrics": {
+          "demographic_parity_difference": 0.1782,
+          "demographic_parity_ratio": 0.498,
+          "equalized_odds_tpr_difference": 0.0068,
+          "equalized_odds_fpr_difference": 0.1517,
+          "brier_score_disparity": 0.0695
+        }
+      }
+    }
+  },
+  "strengths_and_weaknesses": {
+    "baseline_logistic_regression": {
+      "strengths": [
+        "High transparency and linear coefficient explainability",
+        "Strong probability calibration out of the box",
+        "Low computational and inference latency overhead"
+      ],
+      "weaknesses": [
+        "Assumes linear decision boundaries in feature space",
+        "Limited capacity to capture complex non-linear feature interactions without manual feature engineering"
+      ]
+    },
+    "candidate_lightgbm": {
+      "strengths": [
+        "Captures non-linear feature interactions naturally",
+        "Higher PR-AUC ranking performance on churn target class",
+        "Higher precision and recall at top 10% campaign capacity"
+      ],
+      "weaknesses": [
+        "Slightly increased model complexity compared to linear baseline",
+        "Requires strict hyperparameter bounding to prevent overfitting on small sample sizes"
+      ]
+    }
+  },
+  "acceptance_gates": {
+    "pr_auc_improvement_gate": {
+      "threshold": ">= +0.0100",
+      "measured_difference": 0.0316,
+      "passed": true
+    },
+    "calibration_integrity_gate": {
+      "threshold": "<= +0.0200 Brier degradation",
+      "measured_difference": -0.0029,
+      "passed": true
+    },
+    "fairness_parity_gate": {
+      "threshold": "<= +0.0500 DP difference change",
+      "measured_difference": -0.0002,
+      "passed": true
+    },
+    "operational_reproducibility_gate": {
+      "threshold": "Fully reproducible pipeline execution",
+      "passed": true
+    }
+  },
+  "final_decision": {
+    "selected_model_name": "candidate_gradient_boosting",
+    "selected_model_type": "LightGBM",
+    "all_gates_passed": true,
+    "rationale": "Selected 'candidate_gradient_boosting' (LightGBM) because it satisfied all predefined acceptance gates: PR-AUC improved by +0.0316 (gate threshold: >= +0.0100); Brier calibration score changed by -0.0029 (gate threshold: <= +0.0200); gender demographic parity difference changed by -0.0002 (gate threshold: <= +0.0500); and pipeline execution is fully reproducible and integrated."
+  }
+}

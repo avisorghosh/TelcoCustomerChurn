@@ -125,12 +125,12 @@ def prepare_features_and_target(
     return X, y
 
 
-def train_baseline(
+def train_model(
     config_path: str | Path | None = None,
     data_path_override: str | Path | None = None,
     log_to_mlflow: bool = True,
 ) -> tuple[Pipeline, dict[str, Any], dict[str, Path]]:
-    """Execute complete baseline training workflow and serialize artifacts.
+    """Execute model training workflow and serialize artifacts.
 
     Args:
         config_path: Optional path to training YAML config.
@@ -240,6 +240,32 @@ def train_baseline(
         )
 
     return pipeline, metadata, artifact_paths
+
+
+def train_baseline(
+    config_path: str | Path | None = None,
+    data_path_override: str | Path | None = None,
+    log_to_mlflow: bool = True,
+) -> tuple[Pipeline, dict[str, Any], dict[str, Path]]:
+    """Execute complete baseline training workflow and serialize artifacts."""
+    return train_model(
+        config_path=config_path,
+        data_path_override=data_path_override,
+        log_to_mlflow=log_to_mlflow,
+    )
+
+
+def train_candidate(
+    config_path: str | Path | None = "configs/candidate_training.yaml",
+    data_path_override: str | Path | None = None,
+    log_to_mlflow: bool = True,
+) -> tuple[Pipeline, dict[str, Any], dict[str, Path]]:
+    """Execute candidate LightGBM training workflow and serialize artifacts."""
+    return train_model(
+        config_path=config_path,
+        data_path_override=data_path_override,
+        log_to_mlflow=log_to_mlflow,
+    )
 
 
 def predict_churn(

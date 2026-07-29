@@ -1,0 +1,63 @@
+schema_version: "1.0.0"
+model_name: "candidate_gradient_boosting"
+
+data:
+  raw_data_path: "Telco-Customer-Churn.csv"
+  contract_config_path: "configs/data_contract.yaml"
+
+split:
+  train_size: 0.70
+  val_size: 0.15
+  test_size: 0.15
+  random_seed: 42
+  stratify: true
+
+features:
+  primary_key: "customerID"
+  target_column: "Churn"
+  target_positive_value: "Yes"
+  excluded_features:
+    - "customerID"
+    - "gender"
+    - "SeniorCitizen"
+  numeric_features:
+    - "tenure"
+    - "MonthlyCharges"
+    - "TotalCharges"
+  categorical_features:
+    - "Partner"
+    - "Dependents"
+    - "PhoneService"
+    - "MultipleLines"
+    - "InternetService"
+    - "OnlineSecurity"
+    - "OnlineBackup"
+    - "DeviceProtection"
+    - "TechSupport"
+    - "StreamingTV"
+    - "StreamingMovies"
+    - "Contract"
+    - "PaperlessBilling"
+    - "PaymentMethod"
+
+model:
+  type: "GradientBoosting"
+  hyperparameters:
+    n_estimators: 100
+    max_depth: 3
+    learning_rate: 0.05
+    subsample: 0.8
+    max_features: "sqrt"
+    random_state: 42
+
+artifacts:
+  output_dir: "models"
+  pipeline_filename: "candidate_pipeline.joblib"
+  metadata_filename: "candidate_metadata.json"
+
+mlflow:
+  enabled: true
+  tracking_uri: "file:./mlruns"
+  experiment_name: "telco_customer_churn"
+  registered_model_name: "telco_churn_model"
+  artifact_location: null

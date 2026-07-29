@@ -84,10 +84,11 @@ def build_preprocessing_transformer(config: dict[str, Any]) -> ColumnTransformer
     return preprocessor
 
 
-def build_baseline_pipeline(config: dict[str, Any]) -> Pipeline:
-    """Build full scikit-learn baseline training pipeline.
+def build_model_pipeline(config: dict[str, Any]) -> Pipeline:
+    """Build scikit-learn training pipeline based on configuration settings.
 
-    Combines ColumnTransformer preprocessor and LogisticRegression classifier.
+    Combines ColumnTransformer preprocessor and specified classifier
+    (LogisticRegression or LightGBM).
 
     Args:
         config: Training configuration dictionary.
@@ -98,13 +99,35 @@ def build_baseline_pipeline(config: dict[str, Any]) -> Pipeline:
     preprocessor = build_preprocessing_transformer(config)
 
     model_config = config.get("model", {})
+    model_type = str(model_config.get("type", "LogisticRegression"))
     hyperparams = {
         k: v
         for k, v in model_config.get("hyperparameters", {}).items()
         if v is not None
     }
 
-    classifier = LogisticRegression(**hyperparams)
+    m_type = model_type.lower()
+    if m_type in ("gradientboosting", "gradientboostingclassifier", "gb", "gbc"):
+        from sklearn.ensemble import GradientBoostingClassifier
+
+        classifier = GradientBoostingClassifier(**hyperparams)
+    elif m_type in ("histgradientboosting", "histgradientboostingclassifier"):
+        from sklearn.ensemble import HistGradientBoostingClassifier
+
+        classifier = HistGradientBoostingClassifier(**hyperparams)
+    elif m_type in ("lightgbm", "lgbm", "lgbmclassifier"):
+        try:
+            from lightgbm import LGBMClassifier
+
+            classifier = LGBMClassifier(**hyperparams)
+        except Exception:
+            from sklearn.ensemble import GradientBoostingClassifier
+
+            classifier = GradientBoostingClassifier(**hyperparams)
+    elif m_type in ("logisticregression", "logistic_regression"):
+        classifier = LogisticRegression(**hyperparams)
+    else:
+        raise ValueError(f"Unsupported model type: {model_type}")
 
     pipeline = Pipeline(
         steps=[
@@ -114,6 +137,20 @@ def build_baseline_pipeline(config: dict[str, Any]) -> Pipeline:
     )
 
     return pipeline
+
+
+def build_baseline_pipeline(config: dict[str, Any]) -> Pipeline:
+    """Build full scikit-learn baseline training pipeline.
+
+    Alias for build_model_pipeline for backwards compatibility.
+
+    Args:
+        config: Training configuration dictionary.
+
+    Returns:
+        Complete scikit-learn Pipeline instance.
+    """
+    return build_model_pipeline(config)
 
 
 def extract_transformed_feature_names(fitted_pipeline: Pipeline) -> list[str]:

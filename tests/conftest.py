@@ -90,3 +90,38 @@ def sample_customer_dict(sample_valid_df: pd.DataFrame) -> dict[str, Any]:
     row: dict[str, Any] = sample_valid_df.iloc[0].to_dict()
     row.pop("Churn", None)
     return row
+
+
+@pytest.fixture
+def synthetic_dataset() -> pd.DataFrame:
+    """Fixture providing synthetic customer DataFrame with target for splitting."""
+    rows = []
+    for i in range(100):
+        churn_val = "Yes" if i % 4 == 0 else "No"
+        rows.append(
+            {
+                "customerID": f"ID-{i:04d}",
+                "gender": "Female" if i % 2 == 0 else "Male",
+                "SeniorCitizen": 1 if i % 5 == 0 else 0,
+                "Partner": "Yes" if i % 3 == 0 else "No",
+                "Dependents": "No",
+                "tenure": (i % 60) + 1,
+                "PhoneService": "Yes",
+                "MultipleLines": "No",
+                "InternetService": "DSL" if i % 2 == 0 else "Fiber optic",
+                "OnlineSecurity": "No",
+                "OnlineBackup": "Yes" if i % 2 == 0 else "No",
+                "DeviceProtection": "No",
+                "TechSupport": "No",
+                "StreamingTV": "No",
+                "StreamingMovies": "No",
+                "Contract": "Month-to-month" if i % 2 == 0 else "Two year",
+                "PaperlessBilling": "Yes",
+                "PaymentMethod": "Electronic check",
+                "MonthlyCharges": 30.0 + (i % 70),
+                "TotalCharges": 100.0 + (i * 50),
+                "Churn": churn_val,
+            }
+        )
+    return pd.DataFrame(rows)
+
