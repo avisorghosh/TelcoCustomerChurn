@@ -1,5 +1,16 @@
 """Model training, serialization, and inference module."""
 
+from churn_prediction.models.batch_scoring import (
+    BatchScoringError,
+    BatchValidationError,
+    ModelLoadError,
+    generate_batch_id,
+    load_serving_config,
+    quarantine_batch,
+    run_batch_scoring,
+    score_batch,
+    validate_scoring_batch,
+)
 from churn_prediction.models.serialization import (
     load_artifacts,
     load_metadata,
@@ -24,4 +35,13 @@ __all__ = [
     "load_pipeline",
     "load_metadata",
     "load_artifacts",
+    "BatchScoringError",
+    "BatchValidationError",
+    "ModelLoadError",
+    "load_serving_config",
+    "generate_batch_id",
+    "validate_scoring_batch",
+    "quarantine_batch",
+    "score_batch",
+    "run_batch_scoring",
 ]

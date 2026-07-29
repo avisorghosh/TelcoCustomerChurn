@@ -1,0 +1,20 @@
+{
+  "is_valid": false,
+  "schema_version": "1.0.0",
+  "total_rows": 7043,
+  "valid_rows": 7042,
+  "errors": [
+    {
+      "column": "None",
+      "check_type": "column_in_schema",
+      "message": "Pandera check 'column_in_schema' failed on 'None'. Invalid value: 'Churn'.",
+      "invalid_count": 1,
+      "sample_invalid_values": [
+        "Churn"
+      ]
+    }
+  ],
+  "summary": "Validation FAILED with 1 error(s) across 7043 row(s).",
+  "timestamp": "2026-07-29T14:13:09.412844+00:00",
+  "batch_id": "integration_test_batch_001"
+}

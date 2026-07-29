@@ -147,18 +147,17 @@ def get_pandera_schema(
             )
 
     target_col = config.get("target_column", "Churn")
-    if is_training:
-        target_allowed = config.get("target_allowed_values", ["Yes", "No"])
-        columns[target_col] = Column(
-            pt.String,
-            checks=[
-                Check.isin(
-                    target_allowed, error=f"Invalid target domain for '{target_col}'."
-                )
-            ],
-            nullable=False,
-            required=True,
-        )
+    target_allowed = config.get("target_allowed_values", ["Yes", "No"])
+    columns[target_col] = Column(
+        pt.String,
+        checks=[
+            Check.isin(
+                target_allowed, error=f"Invalid target domain for '{target_col}'."
+            )
+        ],
+        nullable=False,
+        required=is_training,
+    )
 
     return DataFrameSchema(
         columns=columns,

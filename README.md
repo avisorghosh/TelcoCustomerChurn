@@ -4,7 +4,7 @@ A production-oriented machine learning system for identifying IBM Telco customer
 
 ## Project status
 
-**In development — Milestone 5 (Evaluation Contract) is complete and batch scoring is next.** This repository is being built as a portfolio project: it will demonstrate a reproducible, tested churn-risk workflow without claiming production performance or causal business impact. See [TASKS.md](TASKS.md) for independently testable milestones and [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) for the architecture and assumptions.
+**In development — Milestone 7 (API Service) is complete and Container & Portfolio Polish is next.** This repository is being built as a portfolio project: it will demonstrate a reproducible, tested churn-risk workflow without claiming production performance or causal business impact. See [TASKS.md](TASKS.md) for independently testable milestones and [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md) for the architecture and assumptions.
 
 ## Local development
 
@@ -19,6 +19,10 @@ uv run python scripts/run_eda.py         # Run reproducible EDA pipeline and exp
 uv run python scripts/train_baseline.py # Train baseline model and save pipeline artifacts
 uv run python scripts/evaluate_baseline.py # Evaluate baseline model and generate metrics/plots
 uv run python scripts/predict_baseline.py # Load trained pipeline and validate inference
+uv run python scripts/validate_scoring_input.py # Validate input dataset against data contract
+uv run python scripts/run_batch_scoring.py # Execute batch scoring pipeline
+uv run python scripts/generate_scoring_output.py # Generate versioned predictions output CSV
+uv run python scripts/run_api.py         # Launch local FastAPI inference service
 ```
 
 To run only the unit tests:
