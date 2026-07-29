@@ -14,6 +14,7 @@ dependencies = [
     "pandera>=0.20.0,<1",
     "pydantic>=2.7.0,<3",
     "pyyaml>=6.0,<7",
+    "scikit-learn>=1.4.0,<2",
     "seaborn>=0.13.2",
 ]
 
