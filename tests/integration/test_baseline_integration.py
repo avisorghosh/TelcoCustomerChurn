@@ -36,7 +36,7 @@ def test_end_to_end_baseline_training_and_reload(tmp_path):
         assert "SeniorCitizen" not in col
 
     output_dir = artifact_paths["pipeline_path"].parent
-    reloaded_pipeline, reloaded_metadata = load_artifacts(output_dir)
+    reloaded_pipeline, _reloaded_metadata = load_artifacts(output_dir)
 
     raw_df = pd.read_csv("Telco-Customer-Churn.csv")
     sample_df = raw_df.iloc[:10].copy()

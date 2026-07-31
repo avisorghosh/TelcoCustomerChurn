@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from churn_prediction.features.pipeline import (
-    build_baseline_pipeline,
+    build_model_pipeline,
     load_training_config,
 )
 from churn_prediction.models.serialization import (
@@ -19,7 +19,7 @@ from churn_prediction.models.serialization import (
 def fitted_pipeline_and_metadata():
     """Fixture returning a fitted dummy pipeline and sample metadata."""
     config = load_training_config()
-    pipeline = build_baseline_pipeline(config)
+    pipeline = build_model_pipeline(config)
 
     df = pd.DataFrame(
         [

@@ -11,11 +11,11 @@ from churn_prediction.tracking.tracker import (
 )
 
 __all__ = [
-    "get_git_revision",
-    "setup_mlflow",
     "create_and_log_data_manifest",
     "create_model_signature",
-    "log_experiment_run",
+    "get_git_revision",
     "load_registered_model",
+    "log_experiment_run",
     "score_with_registered_model",
+    "setup_mlflow",
 ]

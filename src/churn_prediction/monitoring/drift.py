@@ -1,6 +1,6 @@
 """Lightweight data drift reporting module."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -44,7 +44,7 @@ class DriftReport(BaseModel):
         default="1.0.0", description="Observability schema version."
     )
     timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
         description="ISO 8601 UTC timestamp of drift report execution.",
     )
     reference_record_count: int = Field(

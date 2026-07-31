@@ -144,6 +144,6 @@ def test_generate_all_eda_plots(sample_eda_df: pd.DataFrame, tmp_path: Path) -> 
     """Test all EDA plot generation functions save files to specified directory."""
     plots = generate_all_eda_plots(sample_eda_df, output_dir=tmp_path)
     assert len(plots) == 6
-    for plot_name, file_path in plots.items():
+    for _plot_name, file_path in plots.items():
         assert file_path.exists()
         assert file_path.stat().st_size > 0

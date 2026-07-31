@@ -5,7 +5,7 @@ import pytest
 from sklearn.pipeline import Pipeline
 
 from churn_prediction.features.pipeline import (
-    build_baseline_pipeline,
+    build_model_pipeline,
     build_preprocessing_transformer,
     extract_transformed_feature_names,
     load_training_config,
@@ -75,7 +75,7 @@ def test_build_preprocessing_transformer_excludes_sensitive_and_id(sample_config
     """Test that ColumnTransformer excludes customerID, gender, and SeniorCitizen."""
     preprocessor = build_preprocessing_transformer(sample_config)
 
-    for name, _transformer, cols in preprocessor.transformers:
+    for _name, _transformer, cols in preprocessor.transformers:
         assert "customerID" not in cols, "customerID must be excluded from features."
         assert "gender" not in cols, "gender must be excluded from features."
         assert "SeniorCitizen" not in cols, (
@@ -83,9 +83,9 @@ def test_build_preprocessing_transformer_excludes_sensitive_and_id(sample_config
         )
 
 
-def test_build_baseline_pipeline_structure(sample_config):
-    """Test that build_baseline_pipeline constructs a valid scikit-learn Pipeline."""
-    pipeline = build_baseline_pipeline(sample_config)
+def test_build_model_pipeline_structure(sample_config):
+    """Test that build_model_pipeline constructs a valid scikit-learn Pipeline."""
+    pipeline = build_model_pipeline(sample_config)
 
     assert isinstance(pipeline, Pipeline)
     assert "preprocessor" in pipeline.named_steps
@@ -94,7 +94,7 @@ def test_build_baseline_pipeline_structure(sample_config):
 
 def test_pipeline_fit_and_feature_names_out(sample_config, sample_customer_df):
     """Test fitting pipeline on sample data and checking extracted feature names out."""
-    pipeline = build_baseline_pipeline(sample_config)
+    pipeline = build_model_pipeline(sample_config)
 
     X = sample_customer_df.copy()
     y = [0, 1]

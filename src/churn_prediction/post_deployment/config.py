@@ -60,7 +60,7 @@ def load_post_deployment_config(
             },
         }
 
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         config: dict[str, Any] = yaml.safe_load(f) or {}
 
     return config

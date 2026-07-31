@@ -36,6 +36,6 @@ def load_observability_config(
             },
         }
 
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         config: dict[str, Any] = yaml.safe_load(f)
     return config

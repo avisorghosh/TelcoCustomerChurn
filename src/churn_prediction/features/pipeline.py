@@ -30,7 +30,7 @@ def load_training_config(config_path: str | Path | None = None) -> dict[str, Any
     if not path.is_file():
         raise FileNotFoundError(f"Training config not found at: {path}")
 
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         config: dict[str, Any] = yaml.safe_load(f)
     return config
 
@@ -128,20 +128,6 @@ def build_model_pipeline(config: dict[str, Any]) -> Pipeline:
     )
 
     return pipeline
-
-
-def build_baseline_pipeline(config: dict[str, Any]) -> Pipeline:
-    """Build full scikit-learn baseline training pipeline.
-
-    Alias for build_model_pipeline for backwards compatibility.
-
-    Args:
-        config: Training configuration dictionary.
-
-    Returns:
-        Complete scikit-learn Pipeline instance.
-    """
-    return build_model_pipeline(config)
 
 
 def extract_transformed_feature_names(fitted_pipeline: Pipeline) -> list[str]:

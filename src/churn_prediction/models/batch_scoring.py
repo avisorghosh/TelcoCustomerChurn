@@ -7,7 +7,7 @@ quarantine error handling, and output generation for batch scoring datasets.
 import json
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -63,7 +63,7 @@ def load_serving_config(config_path: str | Path | None = None) -> dict[str, Any]
         raise FileNotFoundError(f"Serving config not found at: {path}")
 
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             config: dict[str, Any] = yaml.safe_load(f)
         return config or {}
     except Exception as exc:
@@ -81,7 +81,7 @@ def generate_batch_id(prefix: str = "batch") -> str:
     Returns:
         String batch ID (e.g., batch_20260729_194106).
     """
-    ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    ts = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     short_uuid = uuid.uuid4().hex[:6]
     return f"{prefix}_{ts}_{short_uuid}"
 
@@ -201,7 +201,7 @@ def score_batch(
         )
 
     b_id = batch_id or generate_batch_id()
-    now_utc = datetime.now(timezone.utc).isoformat()
+    now_utc = datetime.now(UTC).isoformat()
 
     try:
         probas = pipeline.predict_proba(df)[:, 1]

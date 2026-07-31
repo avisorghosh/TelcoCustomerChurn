@@ -35,7 +35,7 @@ def main() -> None:
 
     print("=== Training Baseline Churn Prediction Model ===")
     try:
-        pipeline, metadata, artifact_paths = train_baseline(
+        _pipeline, metadata, artifact_paths = train_baseline(
             config_path=args.config,
             data_path_override=args.data,
             log_to_mlflow=not args.no_mlflow,

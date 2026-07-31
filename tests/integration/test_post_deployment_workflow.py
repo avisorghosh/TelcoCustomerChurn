@@ -64,7 +64,7 @@ def test_end_to_end_post_deployment_evaluation(tmp_path: Path) -> None:
     assert Path(json_path).is_file()
     assert Path(md_path).is_file()
 
-    with open(json_path, "r", encoding="utf-8") as f:
+    with open(json_path, encoding="utf-8") as f:
         json_data = json.load(f)
 
     assert json_data["matching_statistics"]["matched_records"] == 50
@@ -73,7 +73,7 @@ def test_end_to_end_post_deployment_evaluation(tmp_path: Path) -> None:
         "RETRAIN_RECOMMENDED",
     ]
 
-    with open(md_path, "r", encoding="utf-8") as f:
+    with open(md_path, encoding="utf-8") as f:
         md_text = f.read()
 
     assert "# Post-Deployment Learning & Model Performance Review" in md_text

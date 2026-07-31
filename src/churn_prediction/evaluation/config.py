@@ -25,6 +25,6 @@ def load_evaluation_config(config_path: str | Path | None = None) -> dict[str, A
     if not path.is_file():
         raise FileNotFoundError(f"Evaluation config file not found at: {path}")
 
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         config: dict[str, Any] = yaml.safe_load(f)
     return config

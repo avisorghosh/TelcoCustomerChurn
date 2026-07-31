@@ -5,7 +5,7 @@ import pytest
 
 from churn_prediction.evaluation.importance import extract_feature_importance
 from churn_prediction.features.pipeline import (
-    build_baseline_pipeline,
+    build_model_pipeline,
     load_training_config,
 )
 
@@ -13,7 +13,7 @@ from churn_prediction.features.pipeline import (
 def test_extract_feature_importance_fitted_pipeline() -> None:
     """Verify feature importance extraction on a fitted baseline pipeline."""
     config = load_training_config()
-    pipeline = build_baseline_pipeline(config)
+    pipeline = build_model_pipeline(config)
 
     # Create dummy training data
     df = pd.DataFrame(

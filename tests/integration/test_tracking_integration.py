@@ -36,7 +36,7 @@ def test_full_mlflow_training_and_registry_integration(
     }
 
     # 1. Train baseline pipeline with MLflow tracking enabled
-    pipeline, metadata, artifact_paths = train_baseline(
+    pipeline, _metadata, _artifact_paths = train_baseline(
         config_path=None,
         data_path_override="Telco-Customer-Churn.csv",
         log_to_mlflow=True,

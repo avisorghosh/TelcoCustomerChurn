@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from churn_prediction.api.app import create_app
 from churn_prediction.api.service import InferenceService
 from churn_prediction.features.pipeline import (
-    build_baseline_pipeline,
+    build_model_pipeline,
     load_training_config,
 )
 from churn_prediction.models.batch_scoring import run_batch_scoring
@@ -24,7 +24,7 @@ def test_api_metrics_endpoint_and_privacy_logging(
     training_config = load_training_config()
     X = sample_valid_df.drop(columns=["customerID", "Churn"])
     y = (sample_valid_df["Churn"] == "Yes").astype(int)
-    pipeline = build_baseline_pipeline(training_config)
+    pipeline = build_model_pipeline(training_config)
     pipeline.fit(X, y)
 
     model_dir = tmp_path / "models"
@@ -100,7 +100,7 @@ def test_batch_scoring_observability_integration(
     training_config = load_training_config()
     X = sample_valid_df.drop(columns=["customerID", "Churn"])
     y = (sample_valid_df["Churn"] == "Yes").astype(int)
-    pipeline = build_baseline_pipeline(training_config)
+    pipeline = build_model_pipeline(training_config)
     pipeline.fit(X, y)
 
     model_dir = tmp_path / "models"

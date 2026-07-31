@@ -15,7 +15,7 @@ def test_default_config_file_exists_and_valid_yaml() -> None:
     config_path = get_default_post_deployment_config_path()
     assert config_path.is_file(), f"Config file missing at: {config_path}"
 
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
     assert isinstance(data, dict)

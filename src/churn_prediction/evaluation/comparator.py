@@ -1,7 +1,7 @@
 """Model comparison engine and Decision Record generator."""
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -244,7 +244,7 @@ def compare_baseline_and_candidate(
         "title": (
             f"Model Selection Decision Record: Baseline vs. {cand_type} Candidate"
         ),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "selection_split": "val",
         "selection_sample_size": len(val_df),
         "evaluation_split": "test",

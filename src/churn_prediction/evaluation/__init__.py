@@ -12,14 +12,14 @@ from churn_prediction.evaluation.segment import evaluate_segment_performance
 from churn_prediction.evaluation.threshold import compute_threshold_analysis
 
 __all__ = [
-    "compute_binary_classification_metrics",
-    "compute_capacity_metrics",
-    "compute_calibration_curve",
-    "compute_threshold_analysis",
-    "extract_feature_importance",
-    "evaluate_model",
-    "load_evaluation_config",
-    "evaluate_segment_performance",
-    "evaluate_fairness_review",
     "compare_baseline_and_candidate",
+    "compute_binary_classification_metrics",
+    "compute_calibration_curve",
+    "compute_capacity_metrics",
+    "compute_threshold_analysis",
+    "evaluate_fairness_review",
+    "evaluate_model",
+    "evaluate_segment_performance",
+    "extract_feature_importance",
+    "load_evaluation_config",
 ]

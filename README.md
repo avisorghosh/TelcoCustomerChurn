@@ -142,6 +142,15 @@ uv run ruff check .
 uv run pytest
 ```
 
+### Pre-commit hooks
+
+The repository includes a `.pre-commit-config.yaml` with hooks for Ruff formatting, Ruff linting, and Conventional Commit message validation. To enable:
+
+```bash
+pre-commit install
+pre-commit run --all-files  # verify on first setup
+```
+
 ---
 
 ## Screenshots / Figures

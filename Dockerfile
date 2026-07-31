@@ -4,7 +4,7 @@ FROM python:3.11-slim AS builder
 WORKDIR /build
 
 # Copy uv binary for fast, deterministic locked dependency installation
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uv/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.11.28 /uv /uv/bin/uv
 
 # Copy dependency specifications and project source
 COPY pyproject.toml uv.lock README.md LICENSE ./

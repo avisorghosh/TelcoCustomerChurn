@@ -1,7 +1,7 @@
 """Baseline evaluation pipeline orchestrator."""
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -146,7 +146,7 @@ def evaluate_model(
             {
                 "model_name": metadata.get("model_name"),
                 "schema_version": metadata.get("schema_version"),
-                "evaluation_timestamp": datetime.now(timezone.utc).isoformat(),
+                "evaluation_timestamp": datetime.now(UTC).isoformat(),
                 "evaluation_split": eval_split_name,
                 "sample_size": len(y_true),
                 "primary_metric": {
@@ -190,7 +190,7 @@ def evaluate_model(
     summary = {
         "model_name": metadata.get("model_name"),
         "schema_version": metadata.get("schema_version"),
-        "evaluation_timestamp": datetime.now(timezone.utc).isoformat(),
+        "evaluation_timestamp": datetime.now(UTC).isoformat(),
         "evaluation_split": eval_split_name,
         "sample_size": len(y_true),
         "primary_metric": {

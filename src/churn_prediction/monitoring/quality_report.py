@@ -1,6 +1,6 @@
 """Operational data quality reporting extending the validation pipeline."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +19,7 @@ class OperationalQualityReport(BaseModel):
         default="1.0.0", description="Data contract schema version."
     )
     timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
         description="ISO 8601 UTC timestamp of report execution.",
     )
     total_records: int = Field(ge=0, description="Total input records evaluated.")

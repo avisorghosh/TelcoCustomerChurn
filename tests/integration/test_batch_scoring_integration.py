@@ -111,7 +111,7 @@ output:
     q_file = quarantine_dir / "quarantine_batch_999_quarantine.json"
     assert q_file.is_file()
 
-    with open(q_file, "r", encoding="utf-8") as f:
+    with open(q_file, encoding="utf-8") as f:
         q_data = json.load(f)
 
     assert q_data["is_valid"] is False
@@ -131,13 +131,13 @@ def test_integration_idempotent_execution(
     out1 = tmp_path / "out1.csv"
     out2 = tmp_path / "out2.csv"
 
-    scored1, path1 = run_batch_scoring(
+    _scored1, path1 = run_batch_scoring(
         input_path=input_csv,
         config_path=serving_config_for_tmp_model,
         output_path_override=out1,
         batch_id_override="fixed_batch_id",
     )
-    scored2, path2 = run_batch_scoring(
+    _scored2, path2 = run_batch_scoring(
         input_path=input_csv,
         config_path=serving_config_for_tmp_model,
         output_path_override=out2,

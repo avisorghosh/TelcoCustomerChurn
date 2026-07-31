@@ -1,5 +1,6 @@
 """Configuration loader for serving and API settings."""
 
+import contextlib
 import os
 from pathlib import Path
 from typing import Any
@@ -28,7 +29,7 @@ def load_serving_config(config_path: str | Path | None = None) -> dict[str, Any]
 
     path = Path(config_path) if config_path else get_default_serving_config_path()
     if path.is_file():
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             config: dict[str, Any] = yaml.safe_load(f) or {}
     else:
         config = {
@@ -62,10 +63,8 @@ def load_serving_config(config_path: str | Path | None = None) -> dict[str, Any]
 
     env_port = os.getenv("CHURN_API_PORT") or os.getenv("PORT")
     if env_port:
-        try:
+        with contextlib.suppress(ValueError):
             config["api"]["port"] = int(env_port)
-        except ValueError:
-            pass
 
     env_model_dir = os.getenv("CHURN_MODEL_DIR")
     if env_model_dir:
@@ -81,10 +80,8 @@ def load_serving_config(config_path: str | Path | None = None) -> dict[str, Any]
 
     env_threshold = os.getenv("CHURN_DECISION_THRESHOLD")
     if env_threshold:
-        try:
+        with contextlib.suppress(ValueError):
             config["scoring"]["decision_threshold"] = float(env_threshold)
-        except ValueError:
-            pass
 
     env_version = os.getenv("CHURN_MODEL_VERSION") or os.getenv("CHURN_API_VERSION")
     if env_version:

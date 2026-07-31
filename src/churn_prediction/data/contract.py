@@ -1,6 +1,6 @@
 """Data contract definition, schema generation, and report models."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -50,7 +50,7 @@ class ValidationReport(BaseModel):
     )
     summary: str = Field(description="Human-readable summary of validation outcome.")
     timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        default_factory=lambda: datetime.now(UTC).isoformat(),
         description="ISO 8601 UTC timestamp of report generation.",
     )
 
@@ -75,7 +75,7 @@ def load_contract_config(config_path: str | Path | None = None) -> dict[str, Any
     if not path.is_file():
         raise FileNotFoundError(f"Data contract config not found at: {path}")
 
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         config: dict[str, Any] = yaml.safe_load(f)
     return config
 

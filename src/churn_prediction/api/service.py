@@ -1,7 +1,8 @@
 """Inference service logic for single-customer predictions."""
 
 import logging
-from datetime import datetime, timezone
+import os
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -124,8 +125,6 @@ class InferenceService:
     @property
     def model_version(self) -> str:
         """Return model version string from loaded metadata or environment override."""
-        import os
-
         env_version = os.getenv("CHURN_MODEL_VERSION")
         if env_version:
             return env_version
@@ -173,7 +172,7 @@ class InferenceService:
             probas = self.pipeline.predict_proba(df)[:, 1]
             churn_probability = float(probas[0])
             predicted_class = int(churn_probability >= self.decision_threshold)
-            timestamp = datetime.now(timezone.utc).isoformat()
+            timestamp = datetime.now(UTC).isoformat()
 
             version_str = self.model_version
             metrics_manager.record_prediction(

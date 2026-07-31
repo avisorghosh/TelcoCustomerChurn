@@ -91,7 +91,7 @@ def plot_numeric_distributions(
     cols_to_use = [c for c in numeric_cols if c in df.columns]
     n_cols = len(cols_to_use)
 
-    fig, axes = plt.subplots(2, n_cols, figsize=(4 * n_cols, 7), dpi=300)
+    _fig, axes = plt.subplots(2, n_cols, figsize=(4 * n_cols, 7), dpi=300)
 
     palette = {"No": "#2b5c8f", "Yes": "#d9534f"}
 
@@ -320,7 +320,7 @@ def plot_fairness_attributes(
     out_dir = _ensure_output_dir(output_dir)
     file_path = out_dir / "fairness_attributes.png"
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4), dpi=300)
+    _fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4), dpi=300)
 
     # Gender
     if "gender" in df.columns and "Churn" in df.columns:

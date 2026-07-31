@@ -35,7 +35,7 @@ def load_decision_record(decision_record_path: str | Path) -> dict[str, Any]:
     path = Path(decision_record_path)
     if not path.is_file():
         raise PromotionError(f"Decision record not found at: {path}")
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         record: dict[str, Any] = json.load(f)
     return record
 
@@ -91,7 +91,7 @@ def promote_selected_model(
         config_path = Path(serving_config_path)
         if not config_path.is_file():
             raise PromotionError(f"Serving config not found at: {config_path}")
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(config_path, encoding="utf-8") as f:
             config = yaml.safe_load(f) or {}
         model_cfg = config.setdefault("model", {})
         model_cfg["model_dir"] = str(model_path)

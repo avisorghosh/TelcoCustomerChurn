@@ -12,13 +12,13 @@ from churn_prediction.api.schemas import (
 from churn_prediction.api.service import InferenceService, ModelNotLoadedError
 
 __all__ = [
-    "create_app",
-    "load_serving_config",
     "CustomerRecord",
     "ErrorResponse",
     "HealthResponse",
-    "PredictionResponse",
-    "ReadinessResponse",
     "InferenceService",
     "ModelNotLoadedError",
+    "PredictionResponse",
+    "ReadinessResponse",
+    "create_app",
+    "load_serving_config",
 ]

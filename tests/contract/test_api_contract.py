@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from churn_prediction.api.app import create_app
 from churn_prediction.api.service import InferenceService
 from churn_prediction.features.pipeline import (
-    build_baseline_pipeline,
+    build_model_pipeline,
     load_training_config,
 )
 from churn_prediction.models.serialization import save_artifacts
@@ -21,7 +21,7 @@ def trained_artifacts(tmp_path: Path, sample_valid_df):
     """Fixture to train baseline pipeline and output artifacts to tmp_path."""
     config = load_training_config()
     X, y = prepare_features_and_target(sample_valid_df, config)
-    pipeline = build_baseline_pipeline(config)
+    pipeline = build_model_pipeline(config)
     pipeline.fit(X, y)
 
     metadata = {

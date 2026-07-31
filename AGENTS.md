@@ -17,6 +17,7 @@ Use Python 3.11, `uv`, and the committed project lockfile:
 
 ```bash
 uv sync --locked        # create the locked development environment
+pre-commit install      # install pre-commit hooks (ruff format, ruff check, conventional commits)
 uv run ruff check .     # lint source and tests
 uv run ruff format --check .  # check formatting
 uv run pytest           # run the full test suite

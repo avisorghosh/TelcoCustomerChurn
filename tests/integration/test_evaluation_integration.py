@@ -78,7 +78,7 @@ def test_evaluate_persisted_baseline_model_end_to_end() -> None:
         with open(train_config_path, "w", encoding="utf-8") as f:
             yaml.safe_dump(train_config, f)
 
-        pipeline, metadata, artifact_paths = train_baseline(
+        _pipeline, _metadata, artifact_paths = train_baseline(
             config_path=train_config_path
         )
         assert artifact_paths["pipeline_path"].is_file()
@@ -149,7 +149,7 @@ def test_evaluate_persisted_baseline_model_end_to_end() -> None:
             assert path.stat().st_size > 0, f"Artifact {artifact_key} is empty"
 
         # Verify JSON report parseability
-        with open(reports_dir / "evaluation_metrics.json", "r", encoding="utf-8") as f:
+        with open(reports_dir / "evaluation_metrics.json", encoding="utf-8") as f:
             saved_metrics = json.load(f)
             assert saved_metrics["primary_metric"]["name"] == "PR-AUC"
 

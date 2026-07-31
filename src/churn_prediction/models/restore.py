@@ -109,7 +109,7 @@ def restore_model_from_dir(
     shutil.copy2(src_pipeline, tgt_pipeline)
     shutil.copy2(src_metadata, tgt_metadata)
 
-    pipeline, metadata = load_artifacts(
+    _pipeline, metadata = load_artifacts(
         output_dir=tgt_dir,
         pipeline_filename=pipeline_filename,
         metadata_filename=metadata_filename,

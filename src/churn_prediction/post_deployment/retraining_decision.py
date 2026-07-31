@@ -59,7 +59,7 @@ def make_retraining_decision(
 
     if baseline_metrics_path and Path(baseline_metrics_path).is_file():
         try:
-            with open(baseline_metrics_path, "r", encoding="utf-8") as f:
+            with open(baseline_metrics_path, encoding="utf-8") as f:
                 base_data = json.load(f)
 
             if "metrics" in base_data and "pr_auc" in base_data["metrics"]:
@@ -90,7 +90,7 @@ def make_retraining_decision(
 
     if drift_report_path and Path(drift_report_path).is_file():
         try:
-            with open(drift_report_path, "r", encoding="utf-8") as f:
+            with open(drift_report_path, encoding="utf-8") as f:
                 drift_data = json.load(f)
 
             drift_summary = drift_data.get("summary", {})

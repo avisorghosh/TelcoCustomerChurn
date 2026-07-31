@@ -1,7 +1,7 @@
 """Source data manifest handling and checksum tracking."""
 
 import hashlib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -55,7 +55,7 @@ def count_csv_rows(file_path: Path) -> int:
     Returns:
         Number of data rows.
     """
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         lines = [line.strip() for line in f if line.strip()]
     return max(0, len(lines) - 1) if lines else 0
 
@@ -81,7 +81,7 @@ def create_source_manifest(
 
     sha256 = compute_sha256(path)
     row_count = count_csv_rows(path)
-    timestamp = datetime.now(timezone.utc).isoformat()
+    timestamp = datetime.now(UTC).isoformat()
 
     return SourceManifest(
         source_path=str(path.resolve()),

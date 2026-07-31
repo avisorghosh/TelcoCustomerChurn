@@ -69,7 +69,7 @@ def load_metadata(metadata_path: str | Path) -> dict[str, Any]:
     path = Path(metadata_path)
     if not path.is_file():
         raise FileNotFoundError(f"Metadata artifact not found at: {path}")
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         metadata: dict[str, Any] = json.load(f)
     return metadata
 

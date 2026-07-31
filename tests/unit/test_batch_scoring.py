@@ -44,7 +44,7 @@ def test_generate_batch_id() -> None:
 def test_validate_scoring_batch_valid(sample_valid_df: pd.DataFrame) -> None:
     """Test validation of valid customer scoring batch."""
     scoring_df = sample_valid_df.drop(columns=["Churn"])
-    parsed_df, report = validate_scoring_batch(scoring_df, raise_on_error=False)
+    _parsed_df, report = validate_scoring_batch(scoring_df, raise_on_error=False)
 
     assert report.is_valid is True
     assert report.total_rows == len(scoring_df)
@@ -56,7 +56,7 @@ def test_validate_scoring_batch_duplicate_id(sample_valid_df: pd.DataFrame) -> N
     scoring_df = sample_valid_df.drop(columns=["Churn"]).copy()
     scoring_df = pd.concat([scoring_df, scoring_df.iloc[[0]]], ignore_index=True)
 
-    parsed_df, report = validate_scoring_batch(scoring_df, raise_on_error=False)
+    _parsed_df, report = validate_scoring_batch(scoring_df, raise_on_error=False)
     assert report.is_valid is False
     assert any(err.check_type == "duplicate_primary_key" for err in report.errors)
 
@@ -69,7 +69,7 @@ def test_validate_scoring_batch_invalid_schema(
 ) -> None:
     """Test rejection of batch with missing required column."""
     invalid_df = sample_valid_df.drop(columns=["Churn", "Contract"])
-    parsed_df, report = validate_scoring_batch(invalid_df, raise_on_error=False)
+    _parsed_df, report = validate_scoring_batch(invalid_df, raise_on_error=False)
 
     assert report.is_valid is False
     assert any("Contract" in err.message for err in report.errors)
@@ -90,7 +90,7 @@ def test_quarantine_batch(tmp_path: Path) -> None:
     q_path = quarantine_batch(dummy_report, tmp_path, batch_id)
 
     assert q_path.is_file()
-    with open(q_path, "r", encoding="utf-8") as f:
+    with open(q_path, encoding="utf-8") as f:
         data = json.load(f)
 
     assert data["batch_id"] == batch_id

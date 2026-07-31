@@ -13,7 +13,7 @@ from churn_prediction.api.service import (
     ModelNotLoadedError,
 )
 from churn_prediction.features.pipeline import (
-    build_baseline_pipeline,
+    build_model_pipeline,
     load_training_config,
 )
 from churn_prediction.models.serialization import save_artifacts
@@ -25,7 +25,7 @@ def trained_artifacts_dir(tmp_path: Path, sample_valid_df):
     """Fixture to train baseline pipeline on sample_valid_df and save artifacts."""
     config = load_training_config()
     X, y = prepare_features_and_target(sample_valid_df, config)
-    pipeline = build_baseline_pipeline(config)
+    pipeline = build_model_pipeline(config)
     pipeline.fit(X, y)
 
     metadata = {

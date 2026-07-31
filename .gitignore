@@ -30,6 +30,20 @@ mlartifacts/
 *.key
 secrets/
 
+# Generated reports and artifacts (keep directory markers only)
+/reports/evaluation/*
+!/reports/evaluation/.gitkeep
+/reports/scoring/*
+!/reports/scoring/.gitkeep
+/reports/quality/*
+!/reports/quality/.gitkeep
+/reports/quarantine/*
+!/reports/quarantine/.gitkeep
+/reports/drift/*
+!/reports/drift/.gitkeep
+/reports/post_deployment/*
+!/reports/post_deployment/.gitkeep
+
 # OS and editor files
 .DS_Store
 .idea/

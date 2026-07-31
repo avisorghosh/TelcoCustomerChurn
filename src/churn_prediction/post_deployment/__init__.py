@@ -23,13 +23,13 @@ from churn_prediction.post_deployment.retraining_decision import (
 )
 
 __all__ = [
-    "get_default_post_deployment_config_path",
-    "load_post_deployment_config",
-    "load_and_match_delayed_labels",
-    "evaluate_delayed_predictions",
-    "generate_synthetic_delayed_labels",
     "evaluate_campaign_effectiveness",
-    "make_retraining_decision",
+    "evaluate_delayed_predictions",
     "generate_post_deployment_report",
+    "generate_synthetic_delayed_labels",
+    "get_default_post_deployment_config_path",
+    "load_and_match_delayed_labels",
+    "load_post_deployment_config",
+    "make_retraining_decision",
     "run_post_deployment_evaluation",
 ]

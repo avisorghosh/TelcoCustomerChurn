@@ -43,5 +43,17 @@ target-version = "py311"
 line-length = 88
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
-ignore = ["E501"]
+select = ["E", "F", "I", "B", "S", "UP", "PT", "SIM", "RUF"]
+ignore = [
+    "E501",   # line too long — handled by formatter
+    "S101",   # assert usage — acceptable in test code
+    "S603",   # subprocess untrusted input — not applicable
+    "S607",   # partial executable path — not applicable
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+"tests/integration/test_docker_container.py" = ["S310"]
+"tests/unit/test_api_config.py" = ["S104"]
+"scripts/**/*.py" = ["S603", "S607"]
+

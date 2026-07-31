@@ -50,7 +50,7 @@ def test_compare_baseline_and_candidate_workflow(synthetic_dataset, tmp_path):
     assert Path(output_paths["decision_record_json"]).exists()
     assert Path(output_paths["decision_record_md"]).exists()
 
-    with open(output_paths["decision_record_json"], "r", encoding="utf-8") as f:
+    with open(output_paths["decision_record_json"], encoding="utf-8") as f:
         loaded_json = json.load(f)
     assert loaded_json["title"] == record["title"]
     assert "LightGBM" not in loaded_json["title"]

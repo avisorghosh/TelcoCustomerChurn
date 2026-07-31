@@ -101,7 +101,7 @@ def test_end_to_end_scoring_output_contract(
     input_csv = tmp_path / "valid_input.csv"
     sample_valid_df.drop(columns=["Churn"]).to_csv(input_csv, index=False)
 
-    scored_df, output_path = run_batch_scoring(
+    _scored_df, output_path = run_batch_scoring(
         input_path=input_csv,
         config_path=serving_config_for_tmp_model,
         output_path_override=tmp_path / "output_predictions.csv",

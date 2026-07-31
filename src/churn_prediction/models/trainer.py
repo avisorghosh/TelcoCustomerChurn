@@ -1,6 +1,6 @@
 """Baseline model training workflow, data splitting, and inference helpers."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -11,7 +11,7 @@ from sklearn.pipeline import Pipeline
 
 from churn_prediction.data.validator import validate_data
 from churn_prediction.features.pipeline import (
-    build_baseline_pipeline,
+    build_model_pipeline,
     extract_transformed_feature_names,
     load_training_config,
 )
@@ -37,7 +37,7 @@ def load_and_validate_dataset(
         raise FileNotFoundError(f"Input dataset file not found at: {path}")
 
     raw_df = pd.read_csv(path)
-    validated_df, report = validate_data(
+    validated_df, _report = validate_data(
         raw_df,
         config_path=contract_config_path,
         is_training=True,
@@ -167,7 +167,7 @@ def train_model(
     X_test, y_test = prepare_features_and_target(test_df, config)
 
     # 4. Build pipeline
-    pipeline = build_baseline_pipeline(config)
+    pipeline = build_model_pipeline(config)
 
     # 5. Fit preprocessing and classifier ONLY on training split (no leakage)
     pipeline.fit(X_train, y_train)
@@ -205,7 +205,7 @@ def train_model(
             "test_accuracy": round(test_acc, 4),
         },
         "training_config": config,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
     # 8. Save artifacts
